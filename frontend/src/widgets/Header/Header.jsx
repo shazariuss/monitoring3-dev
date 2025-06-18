@@ -30,7 +30,7 @@ import {
     setRefreshInterval,
     setOnlineStatus,
 } from "../../features/app/appSlice";
-import  useAutoRefresh  from "../../shared/hooks/useAutoRefresh";
+import useAutoRefresh from "../../shared/hooks/useAutoRefresh";
 import ExportModal from "../ExportModal/ExportModal";
 import styles from "./Header.module.scss";
 
@@ -132,7 +132,7 @@ function Header() {
                                 {/* Текущий пользователь */}
                                 <Space>
                                     <UserOutlined />
-                                    <Text>tuitshoxrux</Text>
+                                    {/* <Text>tuitshoxrux</Text> */}
                                 </Space>
 
                                 {/* Статус подключения */}

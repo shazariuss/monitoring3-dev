@@ -47,7 +47,7 @@ function MainPage() {
             <Header />
             <Content className={styles.content}>
                 <div className="container">
-                    <StatsCards />
+                    {/* <StatsCards /> */}
                     <QuickFilters />
                     <Filters />
                     <TransactionTable />
