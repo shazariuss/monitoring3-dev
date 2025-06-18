@@ -1,0 +1,39 @@
+.directionBadge {
+    display: inline-flex;
+    align-items: center;
+    font-weight: 500;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+
+    &.outbound {
+        color: #52c41a;
+        background-color: #f6ffed;
+        border-color: #b7eb8f;
+    }
+
+    &.inbound {
+        color: #1890ff;
+        background-color: #e6f7ff;
+        border-color: #91d5ff;
+    }
+
+    &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+}
+
+.size-small {
+    padding: 2px 6px;
+    font-size: 11px;
+}
+
+.size-default {
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+.size-large {
+    padding: 6px 12px;
+    font-size: 14px;
+}

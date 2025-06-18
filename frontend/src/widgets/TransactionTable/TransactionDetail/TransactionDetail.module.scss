@@ -1,0 +1,140 @@
+.transactionDetail {
+    .ant-tabs-content-holder {
+        padding: 0;
+    }
+
+    .ant-tabs-tabpane {
+        padding: 0;
+    }
+}
+
+.loading {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 300px;
+    color: #8c8c8c;
+}
+
+.noData {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 300px;
+    color: #8c8c8c;
+}
+
+.debugCard {
+    margin-bottom: 16px;
+    border: 1px dashed #d9d9d9;
+    background: #fafafa;
+
+    .ant-card-body {
+        padding: 12px;
+    }
+}
+
+.debugHeader {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.mainTabs {
+    .ant-tabs-tab {
+        .anticon {
+            margin-right: 6px;
+        }
+    }
+}
+
+.tabContent {
+    padding: 16px;
+}
+
+.statusCards {
+    margin-bottom: 24px;
+}
+
+.statusCard {
+    height: 100%;
+    border: 1px solid #e8e8e8;
+    transition: all 0.2s ease;
+
+    &:hover {
+        border-color: #1890ff;
+        box-shadow: 0 2px 8px rgba(24, 144, 255, 0.15);
+    }
+
+    .ant-card-body {
+        padding: 16px;
+    }
+}
+
+.dataCard {
+    height: 100%;
+    border: 1px solid #e8e8e8;
+    transition: all 0.2s ease;
+
+    &:hover {
+        border-color: #52c41a;
+        box-shadow: 0 2px 8px rgba(82, 196, 26, 0.15);
+    }
+
+    .ant-card-body {
+        padding: 16px;
+    }
+}
+
+.statusCardContent {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.errorAlert {
+    margin-bottom: 24px;
+}
+
+// Глобальные стили для компонента
+:global {
+    .ant-descriptions-item-label {
+        font-weight: 500;
+        color: #262626;
+    }
+
+    .ant-descriptions-item-content {
+        code {
+            background: #f5f5f5;
+            border: 1px solid #e8e8e8;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+    }
+
+    .ant-timeline-item-content {
+        padding-left: 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    .statusCards {
+        .ant-col {
+            margin-bottom: 8px;
+        }
+    }
+
+    .tabContent {
+        padding: 12px;
+    }
+
+    .debugCard {
+        .ant-space {
+            display: flex;
+            flex-wrap: wrap;
+        }
+    }
+}

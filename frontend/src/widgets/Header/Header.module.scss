@@ -1,0 +1,103 @@
+.header {
+    background: white;
+    border-bottom: 1px solid #f0f0f0;
+    padding: 0;
+    height: auto;
+    line-height: normal;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.headerContent {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+
+    @media (max-width: 768px) {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+    }
+}
+
+.headerLeft {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.title {
+    margin: 0 !important;
+    font-size: 24px;
+    font-weight: 600;
+    color: #262626;
+
+    @media (max-width: 768px) {
+        font-size: 20px;
+    }
+}
+
+.status {
+    align-items: center;
+
+    .ant-badge {
+        .ant-badge-status-text {
+            font-size: 13px;
+        }
+    }
+}
+
+.headerRight {
+    display: flex;
+    align-items: center;
+
+    @media (max-width: 768px) {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
+
+// Стили для статус индикаторов
+:global {
+    .ant-badge-status-success {
+        background-color: #52c41a;
+        animation: pulse 2s infinite;
+    }
+
+    .ant-badge-status-processing {
+        background-color: #1890ff;
+        animation: spin 2s linear infinite;
+    }
+
+    .ant-badge-status-error {
+        background-color: #ff4d4f;
+        animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            opacity: 1;
+        }
+        50% {
+            transform: scale(1.1);
+            opacity: 0.7;
+        }
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    @keyframes spin {
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+}

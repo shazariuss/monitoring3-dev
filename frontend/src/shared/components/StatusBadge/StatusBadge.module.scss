@@ -1,0 +1,44 @@
+.statusBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 500;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+
+    &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .anticon {
+        font-size: 12px;
+    }
+}
+
+.size-small {
+    padding: 2px 6px;
+    font-size: 11px;
+
+    .anticon {
+        font-size: 10px;
+    }
+}
+
+.size-default {
+    padding: 4px 8px;
+    font-size: 12px;
+
+    .anticon {
+        font-size: 12px;
+    }
+}
+
+.size-large {
+    padding: 6px 12px;
+    font-size: 14px;
+
+    .anticon {
+        font-size: 14px;
+    }
+}

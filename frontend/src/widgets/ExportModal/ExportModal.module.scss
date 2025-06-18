@@ -1,0 +1,139 @@
+.exportModal {
+    .ant-modal-body {
+        padding: 16px;
+    }
+}
+
+.loadingContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px;
+    gap: 16px;
+}
+
+.previewCard {
+    margin-bottom: 16px;
+
+    .ant-card-head {
+        padding: 12px 16px;
+        min-height: auto;
+    }
+
+    .ant-card-body {
+        padding: 16px;
+    }
+}
+
+.statsRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.statItem {
+    text-align: center;
+    padding: 12px;
+    background: #fafafa;
+    border-radius: 6px;
+    border: 1px solid #f0f0f0;
+
+    .ant-statistic-title {
+        font-size: 12px;
+        margin-bottom: 4px;
+    }
+}
+
+.formatCard {
+    margin-bottom: 16px;
+
+    .ant-card-head {
+        padding: 12px 16px;
+        min-height: auto;
+    }
+
+    .ant-card-body {
+        padding: 16px;
+    }
+}
+
+.formatOptions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.formatOption {
+    padding: 16px;
+    border: 2px solid #f0f0f0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: #fafafa;
+
+    &:hover {
+        border-color: #d9d9d9;
+        background: #f5f5f5;
+    }
+
+    &.selected {
+        border-color: #1890ff;
+        background: #e6f7ff;
+        box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+    }
+}
+
+.formatHeader {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+
+    .ant-radio {
+        .ant-radio-inner {
+            width: 16px;
+            height: 16px;
+        }
+    }
+}
+
+.formatDescription {
+    font-size: 12px;
+    margin-left: 28px;
+    display: block;
+}
+
+.infoAlert {
+    .ant-alert-message {
+        margin-bottom: 8px;
+    }
+}
+
+.infoList {
+    font-size: 13px;
+    line-height: 1.5;
+
+    div {
+        margin-bottom: 4px;
+
+        &:last-child {
+            margin-bottom: 0;
+        }
+    }
+}
+
+// Переопределяем стили для радио-кнопок
+:global {
+    .ant-radio-wrapper {
+        display: flex;
+        align-items: center;
+    }
+
+    .ant-radio {
+        top: 0;
+    }
+
+    .ant-radio + span {
+        padding-left: 8px;
+    }
+}
