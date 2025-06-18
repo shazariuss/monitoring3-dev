@@ -25,7 +25,6 @@ router.get("/inspect", async (req, res) => {
             console.log(`📋 Checking table structure for ${tableName}...`);
 
             try {
-                // Проверяем существование таблицы
                 const tableExistsQuery = `
           SELECT COUNT(*) as TABLE_EXISTS
           FROM user_tables 
@@ -45,7 +44,6 @@ router.get("/inspect", async (req, res) => {
                     continue;
                 }
 
-                // Получаем структуру таблицы
                 const structureQuery = `
           SELECT 
             column_name,
@@ -62,12 +60,10 @@ router.get("/inspect", async (req, res) => {
                     { tableName }
                 );
 
-                // Получаем количество записей
                 const countQuery = `SELECT COUNT(*) as ROW_COUNT FROM ${tableName}`;
                 const countResult = await connection.execute(countQuery);
                 const rowCount = countResult.rows[0][0];
 
-                // Получаем примеры данных (первые 3 записи)
                 let sampleData = [];
                 if (rowCount > 0) {
                     const sampleQuery = `SELECT * FROM ${tableName} WHERE ROWNUM <= 3`;
@@ -102,7 +98,6 @@ router.get("/inspect", async (req, res) => {
             }
         }
 
-        // Красивый вывод в консоль
         console.log("\n🔍 DATABASE INSPECTION REPORT");
         console.log("============================");
 
