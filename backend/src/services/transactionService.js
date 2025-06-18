@@ -15,36 +15,30 @@ class TransactionService {
             let whereClause = "WHERE 1=1";
             const binds = {};
 
-            // Фильтр по дате (от)
             if (filters.dateFrom) {
                 whereClause += " AND cq.INIT_TIME >= :dateFrom";
                 binds.dateFrom = new Date(filters.dateFrom);
             }
 
-            // Фильтр по дате (до)
             if (filters.dateTo) {
                 whereClause += " AND cq.INIT_TIME <= :dateTo";
                 binds.dateTo = new Date(filters.dateTo);
             }
 
-            // Фильтр по статусу
             if (filters.status) {
                 whereClause += " AND cq.STATE = :status";
                 binds.status = parseInt(filters.status);
             }
 
-            // Фильтр по типу
             if (filters.type) {
                 whereClause += " AND UPPER(cq.TYPE) LIKE UPPER(:type)";
                 binds.type = `%${filters.type}%`;
             }
 
-            // Фильтр только ошибки
             if (filters.errorsOnly === "true") {
                 whereClause += " AND cq.ERROR IS NOT NULL AND cq.ERROR != 0";
             }
 
-            // Поиск
             if (filters.search) {
                 whereClause += ` AND (
           UPPER(TO_CHAR(cq.MESSAGE_ID)) LIKE UPPER(:search) OR 
@@ -87,19 +81,16 @@ class TransactionService {
 
             const result = await connection.execute(query, binds);
 
-            // Преобразуем результаты в чистые объекты
             const transactions = result.rows.map((row) => {
                 const transaction = {};
                 result.metaData.forEach((column, index) => {
                     const columnName = column.name.toLowerCase();
                     let value = row[index];
 
-                    // Преобразуем Date объекты в ISO строки
                     if (value instanceof Date) {
                         value = value.toISOString();
                     }
 
-                    // Убеждаемся что значения простые
                     if (
                         typeof value === "string" ||
                         typeof value === "number" ||
@@ -108,14 +99,12 @@ class TransactionService {
                     ) {
                         transaction[columnName] = value;
                     } else {
-                        // Преобразуем сложные объекты в строки
                         transaction[columnName] = String(value);
                     }
                 });
                 return transaction;
             });
 
-            // Подсчет общего количества записей
             const countQuery = `
         SELECT COUNT(*) as TOTAL
         FROM CONV_QUERIES cq
@@ -126,10 +115,6 @@ class TransactionService {
 
             const countResult = await connection.execute(countQuery, binds);
             const total = countResult.rows[0][0];
-
-            console.log(
-                `✅ Loaded ${transactions.length} transactions (${total} total) - User: tuitshoxrux, Time: 2025-06-18 05:16:52`
-            );
 
             return {
                 data: transactions,
@@ -154,11 +139,6 @@ class TransactionService {
         try {
             connection = await getConnection();
 
-            console.log(
-                `📋 Fetching transaction details for ID: ${id} - User: tuitshoxrux, Time: 2025-06-18 05:24:59`
-            );
-
-            // Основной запрос для получения данных транзакции
             const query = `
       SELECT 
         cq.ID,
@@ -192,23 +172,19 @@ class TransactionService {
                 return null;
             }
 
-            // Создаем чистый объект транзакции
             const row = result.rows[0];
             const metaData = result.metaData;
 
             const transaction = {};
 
-            // Мапим только простые значения без циклических ссылок
             metaData.forEach((column, index) => {
                 const columnName = column.name.toLowerCase();
                 let value = row[index];
 
-                // Преобразуем Date объекты в ISO строки
                 if (value instanceof Date) {
                     value = value.toISOString();
                 }
 
-                // Добавляем только простые типы данных
                 if (
                     typeof value === "string" ||
                     typeof value === "number" ||
@@ -217,14 +193,12 @@ class TransactionService {
                 ) {
                     transaction[columnName] = value;
                 } else {
-                    // Преобразуем сложные объекты в строки
                     transaction[columnName] = String(value);
                 }
             });
 
             console.log(`✅ Base transaction data loaded for: ${id}`);
 
-            // Получаем JSON данные
             console.log(`🔍 Fetching JSON data for transaction: ${id}`);
             let jsonData = null;
             try {
@@ -271,13 +245,11 @@ class TransactionService {
                 jsonData = null;
             }
 
-            // Получаем XML данные - ИСПРАВЛЕННАЯ ВЕРСИЯ ДЛЯ ПРАВИЛЬНОГО ПРЕОБРАЗОВАНИЯ
             console.log(`🔍 Fetching XML data for transaction: ${id}`);
             let xmlData = null;
             let xmlLoadMethod = "none";
 
             try {
-                // Метод 1: Используем XMLSERIALIZE как CLOB
                 console.log(`🔬 Trying XML method 1: XMLSERIALIZE as CLOB...`);
                 try {
                     const xmlQuery1 = `
@@ -326,7 +298,6 @@ class TransactionService {
                         clobError.message
                     );
 
-                    // Метод 2: XMLSerialize как VARCHAR2
                     console.log(
                         `🔬 Trying XML method 2: XMLSERIALIZE as VARCHAR2...`
                     );
@@ -360,7 +331,6 @@ class TransactionService {
                             varcharError.message
                         );
 
-                        // Метод 3: extract().getClobVal()
                         console.log(
                             `🔬 Trying XML method 3: extract().getClobVal()...`
                         );
@@ -417,7 +387,6 @@ class TransactionService {
                                 extractError.message
                             );
 
-                            // Метод 4: Получаем XMLType и работаем с его методами
                             console.log(
                                 `🔬 Trying XML method 4: XMLType object inspection...`
                             );
@@ -448,7 +417,6 @@ class TransactionService {
                                         typeof rawXmlData4 === "object" &&
                                         rawXmlData4 !== null
                                     ) {
-                                        // Логируем все доступные свойства и методы
                                         console.log(
                                             `🔍 XMLType object properties:`,
                                             Object.getOwnPropertyNames(
@@ -460,7 +428,6 @@ class TransactionService {
                                             Object.getPrototypeOf(rawXmlData4)
                                         );
 
-                                        // Пробуем различные способы получения строки из XMLType
                                         const extractionMethods = [
                                             {
                                                 name: "getClobVal",
@@ -553,13 +520,11 @@ class TransactionService {
                                             }
                                         }
 
-                                        // Если методы не сработали, пробуем прямое преобразование
                                         if (!xmlData) {
                                             console.log(
                                                 `🔬 Trying direct XMLType conversion...`
                                             );
 
-                                            // Проверяем, может быть это обёртка над строкой
                                             if (
                                                 rawXmlData4.data &&
                                                 typeof rawXmlData4.data ===
@@ -625,7 +590,6 @@ class TransactionService {
                 xmlData = null;
             }
 
-            // БЕЗОПАСНОЕ ЛОГИРОВАНИЕ ПЕРЕД ПРИСВОЕНИЕМ
             console.log(`🔍 Final XML data check before assignment:`);
             console.log(`   - xmlData type: ${typeof xmlData}`);
             console.log(`   - xmlData length: ${xmlData?.length || 0}`);
@@ -652,7 +616,6 @@ class TransactionService {
                 }`
             );
 
-            // ПРИСВАИВАЕМ ДАННЫЕ С ЛОГИРОВАНИЕМ
             const finalJsonData =
                 typeof jsonData === "string" && jsonData.length > 0
                     ? jsonData
@@ -701,14 +664,48 @@ class TransactionService {
         }
     }
 
-    async getStats() {
+    async getMessageStates() {
         let connection;
         try {
             connection = await getConnection();
 
-            console.log(
-                "📊 Fetching transaction statistics... User: tuitshoxrux, Time: 2025-06-18 05:16:52"
-            );
+            const query = `
+      SELECT 
+        CODE,
+        NAME,
+        ACTIVE,
+        COLOR
+      FROM R_MESSAGES_STATES
+      WHERE ACTIVE = 1
+      ORDER BY CODE
+    `;
+
+            const result = await connection.execute(query);
+
+            const states = result.rows.map((row) => ({
+                code: row[0],
+                name: row[1],
+                active: row[2],
+                color: row[3],
+            }));
+
+            console.log(`✅ Loaded ${states.length} message states`);
+
+            return states;
+        } catch (error) {
+            console.error("❌ Error fetching message states:", error);
+            throw error;
+        } finally {
+            if (connection) {
+                await connection.close();
+            }
+        }
+    }
+
+    async getStats() {
+        let connection;
+        try {
+            connection = await getConnection();
 
             const query = `
         SELECT 
@@ -743,7 +740,6 @@ class TransactionService {
         }
     }
 
-    // Утилита для чтения CLOB данных
     async readLob(lob) {
         return new Promise((resolve, reject) => {
             let data = "";
@@ -753,9 +749,6 @@ class TransactionService {
 
                 lob.on("data", (chunk) => {
                     data += chunk;
-                    console.log(
-                        `📚 CLOB chunk received, current total length: ${data.length}`
-                    );
                 });
 
                 lob.on("end", () => {
@@ -770,13 +763,12 @@ class TransactionService {
                     reject(error);
                 });
 
-                // Таймаут для предотвращения зависания
                 setTimeout(() => {
                     console.log(
                         `⏰ CLOB read timeout reached, current data length: ${data.length}`
                     );
-                    resolve(data); // Возвращаем то что есть
-                }, 10000); // 10 секунд
+                    resolve(data);
+                }, 10000);
             } catch (error) {
                 console.error("❌ Error setting up CLOB reader:", error);
                 reject(error);
@@ -784,7 +776,6 @@ class TransactionService {
         });
     }
 
-    // Остальные методы остаются прежними...
     async getFormTypes() {
         let connection;
         try {

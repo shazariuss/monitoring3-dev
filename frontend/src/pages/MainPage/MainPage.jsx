@@ -48,7 +48,7 @@ function MainPage() {
             <Content className={styles.content}>
                 <div className="container">
                     {/* <StatsCards /> */}
-                    <QuickFilters />
+                    {/* <QuickFilters /> */}
                     <Filters />
                     <TransactionTable />
                 </div>

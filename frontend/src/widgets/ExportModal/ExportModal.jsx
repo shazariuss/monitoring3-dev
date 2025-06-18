@@ -104,14 +104,14 @@ function ExportModal({ visible, onCancel }) {
             title={
                 <Space>
                     <DownloadOutlined />
-                    <span>Export Transactions</span>
+                    <span>Экспортные транзакции</span>
                 </Space>
             }
             open={visible}
             onCancel={onCancel}
             footer={[
                 <Button key="cancel" onClick={onCancel}>
-                    Cancel
+                    Отмена
                 </Button>,
                 <Button
                     key="export"
@@ -121,7 +121,7 @@ function ExportModal({ visible, onCancel }) {
                     onClick={handleExport}
                     disabled={!preview || preview.totalRecords === 0}
                 >
-                    Export {format.toUpperCase()}
+                    Экспорт {format.toUpperCase()}
                 </Button>,
             ]}
             width={550}
@@ -131,19 +131,21 @@ function ExportModal({ visible, onCancel }) {
             {previewLoading ? (
                 <div className={styles.loadingContainer}>
                     <Progress type="circle" size={60} />
-                    <Text type="secondary">Loading export preview...</Text>
+                    <Text type="secondary">
+                        Загрузка предварительного просмотра экспорта...
+                    </Text>
                 </div>
             ) : (
                 preview && (
                     <Card
-                        title="Export Preview"
+                        title="Экспортировать предварительный просмотр"
                         size="small"
                         className={styles.previewCard}
                     >
                         <div className={styles.statsRow}>
                             <div className={styles.statItem}>
                                 <Statistic
-                                    title="Total Records Found"
+                                    title="Всего найдено записей"
                                     value={preview.totalRecords}
                                     valueStyle={{
                                         color: "#1890ff",
@@ -153,7 +155,7 @@ function ExportModal({ visible, onCancel }) {
                             </div>
                             <div className={styles.statItem}>
                                 <Statistic
-                                    title="Will Export"
+                                    title="Буден экспортирован"
                                     value={preview.willExport}
                                     valueStyle={{
                                         color: preview.hasMore
@@ -168,8 +170,8 @@ function ExportModal({ visible, onCancel }) {
                         {preview.hasMore && (
                             <Alert
                                 type="warning"
-                                message="Export Limit Reached"
-                                description={`Only the first ${preview.maxExportLimit} records will be exported. Consider applying filters to reduce the dataset.`}
+                                message="Достигнут лимит экспорта"
+                                description={`Только первые ${preview.maxExportLimit} записи будут экспортированы. Рассмотрите возможность применения фильтров для сокращения набора данных.`}
                                 showIcon
                                 size="small"
                                 style={{ marginTop: 12 }}
@@ -179,8 +181,8 @@ function ExportModal({ visible, onCancel }) {
                         {preview.totalRecords === 0 && (
                             <Alert
                                 type="info"
-                                message="No Data Found"
-                                description="No transactions match your current filters."
+                                message="Данные не найдены"
+                                description="Ни одна транзакция не соответствует вашим текущим фильтрам."
                                 showIcon
                                 size="small"
                                 style={{ marginTop: 12 }}
@@ -192,7 +194,7 @@ function ExportModal({ visible, onCancel }) {
 
             {/* Format Selection */}
             <Card
-                title="Choose Export Format"
+                title="Выберите формат экспорта"
                 size="small"
                 className={styles.formatCard}
             >
@@ -210,12 +212,12 @@ function ExportModal({ visible, onCancel }) {
                             />
                             <Text strong>Excel (.xlsx)</Text>
                         </div>
-                        <Text
+                        {/* <Text
                             type="secondary"
                             className={styles.formatDescription}
                         >
                             Best for data analysis and charts
-                        </Text>
+                        </Text> */}
                     </div>
 
                     <div
@@ -231,12 +233,12 @@ function ExportModal({ visible, onCancel }) {
                             />
                             <Text strong>CSV (.csv)</Text>
                         </div>
-                        <Text
+                        {/* <Text
                             type="secondary"
                             className={styles.formatDescription}
                         >
                             Universal format, works with any spreadsheet app
-                        </Text>
+                        </Text> */}
                     </div>
                 </div>
             </Card>
@@ -244,18 +246,21 @@ function ExportModal({ visible, onCancel }) {
             {/* Export Information */}
             <Alert
                 type="info"
-                message="Export Information"
+                message="Экспорт информации"
                 description={
                     <div className={styles.infoList}>
                         <div>
-                            • Export includes all visible columns and current
-                            filters
+                            • Экспорт включает все видимые столбцы и текущие
+                            фильтры.
                         </div>
                         <div>
-                            • Dates will be formatted as YYYY-MM-DD HH:MM:SS
+                            • Даты будут отформатированы в формате YYYY-MM-DD
+                            HH:MM:SS
                         </div>
-                        <div>• Maximum export limit: 10,000 records</div>
-                        <div>• File will be downloaded automatically</div>
+                        <div>
+                            • Максимальный лимит экспорта: 10 000 записей.
+                        </div>
+                        <div>• Файл будет загружен автоматически</div>
                     </div>
                 }
                 showIcon

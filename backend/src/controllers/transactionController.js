@@ -1,56 +1,135 @@
 const transactionService = require("../services/transactionService");
 
-class TransactionController {
-    async getTransactions(req, res) {
-        try {
-            const filters = req.query;
-            console.log("📋 Fetching transactions with filters:", filters);
+const getTransactions = async (req, res) => {
+    try {
+        const filters = {
+            page: req.query.page || 1,
+            limit: req.query.limit || 10,
+            dateFrom: req.query.dateFrom || undefined,
+            dateTo: req.query.dateTo || undefined,
+            status: req.query.status || undefined,
+            type: req.query.type || undefined,
+            search: req.query.search || undefined,
+            errorsOnly: req.query.errorsOnly || undefined,
+        };
 
-            const result = await transactionService.getTransactions(filters);
+        const result = await transactionService.getTransactions(filters);
 
-            res.json(result);
-        } catch (error) {
-            console.error("Error in getTransactions:", error);
-            res.status(500).json({ error: "Failed to fetch transactions" });
-        }
+        res.json(result);
+    } catch (error) {
+        console.error("Error in getTransactions:", error);
+        res.status(500).json({
+            error: "Failed to fetch transactions",
+            message: error.message,
+        });
     }
+};
 
-    async getTransactionById(req, res) {
-        try {
-            const { id } = req.params;
-            console.log(`📋 Fetching transaction details for ID: ${id}`);
+const getTransactionById = async (req, res) => {
+    try {
+        const { id } = req.params;
 
-            const transaction = await transactionService.getTransactionById(id);
+        const transaction = await transactionService.getTransactionById(id);
 
-            if (!transaction) {
-                console.log(`❌ Transaction not found: ${id}`);
-                return res.status(404).json({ error: "Transaction not found" });
-            }
-
-            console.log(`✅ Transaction details loaded for: ${id}`);
-            console.log(
-                `📊 Data summary: JSON=${!!transaction.json_data}, XML=${!!transaction.xml_data}`
-            );
-
-            // Просто возвращаем объект как есть - он уже чистый
-            res.json(transaction);
-        } catch (error) {
-            console.error("Error in getTransactionById:", error);
-            res.status(500).json({
-                error: "Failed to fetch transaction details",
+        if (!transaction) {
+            console.log(`❌ Transaction not found: ${id}`);
+            return res.status(404).json({
+                error: "Transaction not found",
+                id: id,
             });
         }
-    }
 
-    async getStats(req, res) {
-        try {
-            const stats = await transactionService.getStats();
-            res.json(stats);
-        } catch (error) {
-            console.error("Error in getStats:", error);
-            res.status(500).json({ error: "Failed to fetch stats" });
-        }
-    }
-}
+        console.log(
+            `📊 Data summary: JSON=${!!transaction.json_data}, XML=${!!transaction.xml_data}`
+        );
 
-module.exports = new TransactionController();
+        res.json(transaction);
+    } catch (error) {
+        console.error("Error in getTransactionById:", error);
+        res.status(500).json({
+            error: "Failed to fetch transaction",
+            message: error.message,
+            id: req.params.id,
+        });
+    }
+};
+
+const getStats = async (req, res) => {
+    try {
+        const stats = await transactionService.getStats();
+
+        res.json(stats);
+    } catch (error) {
+        console.error("Error in getStats:", error);
+        res.status(500).json({
+            error: "Failed to fetch statistics",
+            message: error.message,
+        });
+    }
+};
+
+const getFormTypes = async (req, res) => {
+    try {
+        const formTypes = await transactionService.getFormTypes();
+
+        res.json(formTypes);
+    } catch (error) {
+        console.error("Error in getFormTypes:", error);
+        res.status(500).json({
+            error: "Failed to fetch form types",
+            message: error.message,
+        });
+    }
+};
+
+const getErrors = async (req, res) => {
+    try {
+        const errors = await transactionService.getErrors();
+
+        res.json(errors);
+    } catch (error) {
+        console.error("Error in getErrors:", error);
+        res.status(500).json({
+            error: "Failed to fetch error codes",
+            message: error.message,
+        });
+    }
+};
+
+const getMessageStates = async (req, res) => {
+    try {
+        const states = await transactionService.getMessageStates();
+
+        res.json(states);
+    } catch (error) {
+        console.error("Error in getMessageStates:", error);
+        res.status(500).json({
+            error: "Failed to fetch message states",
+            message: error.message,
+        });
+    }
+};
+
+const testConnection = async (req, res) => {
+    try {
+        const result = await transactionService.testConnection();
+
+        res.json(result);
+    } catch (error) {
+        console.error("Error in testConnection:", error);
+        res.status(500).json({
+            error: "Database connection test failed",
+            message: error.message,
+        });
+    }
+};
+
+module.exports = {
+    getTransactions,
+    getTransactionById,
+    getStats,
+    getFormTypes,
+    getErrors,
+    getMessageStates,
+    testConnection,
+};

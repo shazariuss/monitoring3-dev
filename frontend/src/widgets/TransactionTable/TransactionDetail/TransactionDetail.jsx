@@ -48,7 +48,7 @@ function TransactionDetail({ transaction, loading }) {
                     type="secondary"
                     style={{ marginTop: 16, display: "block" }}
                 >
-                    Loading transaction details...
+                    Загрузка деталей транзакции...
                 </Text>
             </div>
         );
@@ -64,14 +64,14 @@ function TransactionDetail({ transaction, loading }) {
                     type="secondary"
                     style={{ marginTop: 16, display: "block" }}
                 >
-                    No transaction data available
+                    Данные о транзакции отсутствуют
                 </Text>
             </div>
         );
     }
 
     const formatDateTime = (dateTime) => {
-        return dateTime ? dayjs(dateTime).format("DD/MM/YYYY HH:mm:ss") : "N/A";
+        return dateTime ? dayjs(dateTime).format("DD/MM/YYYY HH:mm:ss") : "Н/Д";
     };
 
     const getProcessingTime = () => {
@@ -79,9 +79,9 @@ function TransactionDetail({ transaction, loading }) {
             const init = dayjs(transaction.init_time);
             const send = dayjs(transaction.send_time);
             const diff = send.diff(init, "seconds");
-            return `${diff}s`;
+            return `${diff}с`;
         }
-        return "N/A";
+        return "Н/Д";
     };
 
     const getTimelineData = () => {
@@ -93,14 +93,14 @@ function TransactionDetail({ transaction, loading }) {
                 dot: <ClockCircleOutlined />,
                 children: (
                     <div>
-                        <Text strong>Transaction Initiated</Text>
+                        <Text strong>Транзакция инициирована</Text>
                         <br />
                         <Text type="secondary">
                             {formatDateTime(transaction.init_time)}
                         </Text>
                         <br />
                         {/* <Text type="secondary" style={{ fontSize: '11px' }}>
-              User: tuitshoxrux
+              User: User
             </Text> */}
                     </div>
                 ),
@@ -113,7 +113,7 @@ function TransactionDetail({ transaction, loading }) {
                 dot: <ClockCircleOutlined />,
                 children: (
                     <div>
-                        <Text strong>Transaction Sent</Text>
+                        <Text strong>Транзакция отправлена</Text>
                         <br />
                         <Text type="secondary">
                             {formatDateTime(transaction.send_time)}
@@ -125,7 +125,7 @@ function TransactionDetail({ transaction, loading }) {
                                     type="danger"
                                     style={{ fontSize: "11px" }}
                                 >
-                                    Error: {transaction.error_message}
+                                    Ошибка: {transaction.error_message}
                                 </Text>
                             </>
                         )}
@@ -140,7 +140,7 @@ function TransactionDetail({ transaction, loading }) {
                 dot: <CheckCircleOutlined />,
                 children: (
                     <div>
-                        <Text strong>Response Received</Text>
+                        <Text strong>Получен ответ</Text>
                         <br />
                         <Text type="secondary">
                             {formatDateTime(transaction.res_time)}
@@ -165,7 +165,7 @@ function TransactionDetail({ transaction, loading }) {
                     tab={
                         <Space>
                             <InfoCircleOutlined />
-                            <span>Overview</span>
+                            <span>Обзор</span>
                         </Space>
                     }
                     key="overview"
@@ -179,8 +179,9 @@ function TransactionDetail({ transaction, loading }) {
                                     className={styles.statusCard}
                                 >
                                     <Statistic
-                                        title="Transaction ID"
+                                        title="ID Транзакции"
                                         value={transaction.id}
+                                        formatter={(value) => value}
                                         valueStyle={{
                                             fontSize: "16px",
                                             fontFamily: "monospace",
@@ -194,7 +195,7 @@ function TransactionDetail({ transaction, loading }) {
                                     className={styles.statusCard}
                                 >
                                     <div className={styles.statusCardContent}>
-                                        <Text type="secondary">Status</Text>
+                                        <Text type="secondary">Статус</Text>
                                         <StatusBadge
                                             state={transaction.state}
                                             error={transaction.error}
@@ -212,7 +213,9 @@ function TransactionDetail({ transaction, loading }) {
                                     className={styles.statusCard}
                                 >
                                     <div className={styles.statusCardContent}>
-                                        <Text type="secondary">Direction</Text>
+                                        <Text type="secondary">
+                                            Направление
+                                        </Text>
                                         <DirectionBadge
                                             direction={transaction.direction}
                                             size="large"
@@ -226,7 +229,7 @@ function TransactionDetail({ transaction, loading }) {
                                     className={styles.statusCard}
                                 >
                                     <Statistic
-                                        title="Processing Time"
+                                        title="Время обработки"
                                         value={getProcessingTime()}
                                         valueStyle={{
                                             fontSize: "16px",
@@ -247,7 +250,7 @@ function TransactionDetail({ transaction, loading }) {
                                                 style={{ color: "#1890ff" }}
                                             />
                                             <Text type="secondary">
-                                                JSON Data
+                                                Данные JSON
                                             </Text>
                                         </Space>
                                         <Space>
@@ -259,8 +262,8 @@ function TransactionDetail({ transaction, loading }) {
                                                 }
                                             >
                                                 {transaction.json_data
-                                                    ? "Available"
-                                                    : "Not Available"}
+                                                    ? "Доступно"
+                                                    : "Недоступно"}
                                             </Tag>
                                             {transaction.json_data && (
                                                 <Text
@@ -271,7 +274,7 @@ function TransactionDetail({ transaction, loading }) {
                                                         transaction.json_data
                                                             .length
                                                     }{" "}
-                                                    chars
+                                                    символов
                                                 </Text>
                                             )}
                                         </Space>
@@ -286,7 +289,7 @@ function TransactionDetail({ transaction, loading }) {
                                                 style={{ color: "#52c41a" }}
                                             />
                                             <Text type="secondary">
-                                                XML Data
+                                                Данные XML
                                             </Text>
                                         </Space>
                                         <Space>
@@ -298,8 +301,8 @@ function TransactionDetail({ transaction, loading }) {
                                                 }
                                             >
                                                 {transaction.xml_data
-                                                    ? "Available"
-                                                    : "Not Available"}
+                                                    ? "Доступно"
+                                                    : "Недоступно"}
                                             </Tag>
                                             {transaction.xml_data && (
                                                 <Text
@@ -310,7 +313,7 @@ function TransactionDetail({ transaction, loading }) {
                                                         transaction.xml_data
                                                             .length
                                                     }{" "}
-                                                    chars
+                                                    символов
                                                 </Text>
                                             )}
                                         </Space>
@@ -323,9 +326,9 @@ function TransactionDetail({ transaction, loading }) {
                         {transaction.error && transaction.error !== 0 && (
                             <Alert
                                 type="error"
-                                message={`Error ${transaction.error}: ${
+                                message={`Ошибка ${transaction.error}: ${
                                     transaction.error_description ||
-                                    "Unknown error"
+                                    "Неизвестная ошибка"
                                 }`}
                                 description={transaction.error_message}
                                 icon={<BugOutlined />}
@@ -335,22 +338,22 @@ function TransactionDetail({ transaction, loading }) {
                         )}
 
                         {/* Main Information */}
-                        <Card title="Transaction Information" size="small">
+                        <Card title="Информация о транзакции" size="small">
                             <Descriptions
                                 column={{ xs: 1, sm: 2, md: 3 }}
                                 size="small"
                             >
-                                <Descriptions.Item label="Message ID">
+                                <Descriptions.Item label="ID Сообщения">
                                     <Text code>
-                                        {transaction.message_id || "N/A"}
+                                        {transaction.message_id || "Н/Д"}
                                     </Text>
                                 </Descriptions.Item>
-                                <Descriptions.Item label="Reference">
+                                <Descriptions.Item label="Ссылка">
                                     <Text code>
-                                        {transaction.reference_ || "N/A"}
+                                        {transaction.reference_ || "Н/Д"}
                                     </Text>
                                 </Descriptions.Item>
-                                <Descriptions.Item label="Type">
+                                <Descriptions.Item label="Тип">
                                     <TypeBadge
                                         type={transaction.type}
                                         typeDescription={
@@ -358,34 +361,33 @@ function TransactionDetail({ transaction, loading }) {
                                         }
                                     />
                                 </Descriptions.Item>
-                                <Descriptions.Item label="File Name">
+                                <Descriptions.Item label="Имя файла">
                                     <Text code>
-                                        {transaction.file_name || "N/A"}
+                                        {transaction.file_name || "Н/Д"}
                                     </Text>
                                 </Descriptions.Item>
-                                <Descriptions.Item label="Response File">
+                                <Descriptions.Item label="Файл ответа">
                                     <Text code>
-                                        {transaction.res_file_name || "N/A"}
+                                        {transaction.res_file_name || "Н/Д"}
                                     </Text>
                                 </Descriptions.Item>
-                                <Descriptions.Item label="Init Time">
+                                <Descriptions.Item label="Время инициации">
                                     {formatDateTime(transaction.init_time)}
                                 </Descriptions.Item>
-                                <Descriptions.Item label="Send Time">
+                                <Descriptions.Item label="Время отправки">
                                     {formatDateTime(transaction.send_time)}
                                 </Descriptions.Item>
-                                <Descriptions.Item label="Response Time">
+                                <Descriptions.Item label="Время ответа">
                                     {formatDateTime(transaction.res_time)}
                                 </Descriptions.Item>
-                                <Descriptions.Item label="Data">
+                                <Descriptions.Item label="Данные">
                                     {formatDateTime(transaction.data)}
                                 </Descriptions.Item>
                             </Descriptions>
                         </Card>
 
-                        {/* Session Information */}
-                        <Card
-                            title="Session Information"
+                        {/* <Card
+                            title="Информация о сессии"
                             size="small"
                             style={{ marginTop: 16 }}
                         >
@@ -393,62 +395,61 @@ function TransactionDetail({ transaction, loading }) {
                                 column={{ xs: 1, sm: 2 }}
                                 size="small"
                             >
-                                <Descriptions.Item label="Current User">
-                                    {/* <Text code>tuitshoxrux</Text> */}
+                                <Descriptions.Item label="Текущий пользователь">
                                 </Descriptions.Item>
-                                <Descriptions.Item label="Current Time">
+                                <Descriptions.Item label="Текущее время">
                                     <Text>2025-06-18 04:49:00</Text>
                                 </Descriptions.Item>
-                                <Descriptions.Item label="Timezone">
+                                <Descriptions.Item label="Часовой пояс">
                                     <Text>UTC</Text>
                                 </Descriptions.Item>
-                                <Descriptions.Item label="Database">
+                                <Descriptions.Item label="База данных">
                                     <Text>Oracle 19c</Text>
                                 </Descriptions.Item>
                             </Descriptions>
-                        </Card>
+                        </Card> */}
                     </div>
                 </TabPane>
 
-                <TabPane
+                {/* <TabPane
                     tab={
                         <Space>
                             <HistoryOutlined />
-                            <span>Timeline</span>
+                            <span>Хронология</span>
                         </Space>
                     }
                     key="timeline"
                 >
                     <div className={styles.tabContent}>
-                        <Card title="Processing Timeline" size="small">
+                        <Card title="Хронология обработки" size="small">
                             <Timeline items={getTimelineData()} />
 
                             <Divider />
 
                             <div>
-                                <Title level={5}>Processing Summary</Title>
+                                <Title level={5}>Сводка обработки</Title>
                                 <Row gutter={16}>
                                     <Col span={8}>
                                         <Statistic
-                                            title="Total Processing Time"
+                                            title="Общее время обработки"
                                             value={getProcessingTime()}
                                             valueStyle={{ color: "#1890ff" }}
                                         />
                                     </Col>
                                     <Col span={8}>
                                         <Statistic
-                                            title="Timeline Steps"
+                                            title="Шаги хронологии"
                                             value={getTimelineData().length}
                                             valueStyle={{ color: "#52c41a" }}
                                         />
                                     </Col>
                                     <Col span={8}>
                                         <Statistic
-                                            title="Status"
+                                            title="Статус"
                                             value={
                                                 transaction.error
-                                                    ? "Failed"
-                                                    : "Success"
+                                                    ? "Неудача"
+                                                    : "Успех"
                                             }
                                             valueStyle={{
                                                 color: transaction.error
@@ -461,16 +462,16 @@ function TransactionDetail({ transaction, loading }) {
                             </div>
                         </Card>
                     </div>
-                </TabPane>
+                </TabPane> */}
 
                 <TabPane
                     tab={
                         <Space>
                             <FileTextOutlined />
-                            <span>JSON Data</span>
+                            <span>Данные JSON</span>
                             {transaction.json_data && (
                                 <Tag color="green" size="small">
-                                    Available
+                                    Доступно
                                 </Tag>
                             )}
                         </Space>
@@ -482,15 +483,15 @@ function TransactionDetail({ transaction, loading }) {
                             <CodeViewer
                                 code={transaction.json_data}
                                 language="json"
-                                title="JSON Source Data"
+                                title="Исходные данные JSON"
                                 fileName={`transaction-${transaction.id}-json`}
                                 height="500px"
                             />
                         ) : (
                             <Alert
                                 type="info"
-                                message="No JSON Data Available"
-                                description="This transaction doesn't have JSON source data."
+                                message="Данные JSON недоступны"
+                                description="У этой транзакции отсутствуют исходные данные JSON."
                                 showIcon
                             />
                         )}
@@ -501,10 +502,10 @@ function TransactionDetail({ transaction, loading }) {
                     tab={
                         <Space>
                             <CodeOutlined />
-                            <span>XML Data</span>
+                            <span>Данные XML</span>
                             {transaction.xml_data && (
                                 <Tag color="green" size="small">
-                                    Available
+                                    Доступно
                                 </Tag>
                             )}
                         </Space>
@@ -516,15 +517,15 @@ function TransactionDetail({ transaction, loading }) {
                             <CodeViewer
                                 code={transaction.xml_data}
                                 language="xml"
-                                title="XML Source Data"
+                                title="Исходные данные XML"
                                 fileName={`transaction-${transaction.id}-xml`}
                                 height="500px"
                             />
                         ) : (
                             <Alert
                                 type="info"
-                                message="No XML Data Available"
-                                description="This transaction doesn't have XML source data."
+                                message="Данные XML недоступны"
+                                description="У этой транзакции отсутствуют исходные данные XML."
                                 showIcon
                             />
                         )}

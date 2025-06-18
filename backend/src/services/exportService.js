@@ -3,14 +3,12 @@ const XLSX = require("xlsx");
 const { Parser } = require("json2csv");
 
 class ExportService {
-    // Утилита для очистки параметров
     cleanFilters(filters) {
         const cleaned = {};
 
         Object.keys(filters).forEach((key) => {
             const value = filters[key];
 
-            // Пропускаем null, undefined, пустые строки и строку 'null'
             if (
                 value !== null &&
                 value !== undefined &&
@@ -18,7 +16,6 @@ class ExportService {
                 value !== "null" &&
                 value !== "undefined"
             ) {
-                // Специальная обработка для числовых полей
                 if (key === "status" && !isNaN(value)) {
                     cleaned[key] = parseInt(value);
                 } else if (key === "errorsOnly") {
@@ -37,7 +34,6 @@ class ExportService {
         try {
             connection = await getConnection();
 
-            // Очищаем фильтры от некорректных значений
             const cleanedFilters = this.cleanFilters(filters);
             console.log("Cleaned filters:", cleanedFilters);
 
@@ -76,7 +72,6 @@ class ExportService {
 
             const binds = {};
 
-            // Применяем только валидные фильтры
             if (cleanedFilters.dateFrom) {
                 query += ` AND cq.INIT_TIME >= :dateFrom`;
                 binds.dateFrom = new Date(cleanedFilters.dateFrom);
@@ -119,13 +114,11 @@ class ExportService {
 
             const result = await connection.execute(query, binds);
 
-            // Преобразуем данные
             const data = result.rows.map((row) => {
                 const transaction = {};
                 result.metaData.forEach((column, index) => {
                     let value = row[index];
 
-                    // Форматируем даты
                     if (value instanceof Date) {
                         value = value
                             .toISOString()
@@ -157,24 +150,23 @@ class ExportService {
         const worksheet = XLSX.utils.json_to_sheet(data);
         const workbook = XLSX.utils.book_new();
 
-        // Настраиваем ширину колонок
         const colWidths = [
-            { wch: 12 }, // ID
-            { wch: 15 }, // MESSAGE_ID
-            { wch: 20 }, // TYPE
-            { wch: 10 }, // DIRECTION
-            { wch: 12 }, // STATUS
-            { wch: 20 }, // INIT_TIME
-            { wch: 20 }, // SEND_TIME
-            { wch: 20 }, // RES_TIME
-            { wch: 8 }, // ERROR
-            { wch: 30 }, // ERROR_MESSAGE
-            { wch: 25 }, // FILE_NAME
-            { wch: 25 }, // RES_FILE_NAME
-            { wch: 15 }, // REFERENCE_
-            { wch: 30 }, // ERROR_DESCRIPTION
-            { wch: 30 }, // TYPE_DESCRIPTION
-            { wch: 20 }, // TYPE_SHORT_TITLE
+            { wch: 12 },
+            { wch: 15 },
+            { wch: 20 },
+            { wch: 10 },
+            { wch: 12 },
+            { wch: 20 },
+            { wch: 20 },
+            { wch: 20 },
+            { wch: 8 },
+            { wch: 30 },
+            { wch: 25 },
+            { wch: 25 },
+            { wch: 15 },
+            { wch: 30 },
+            { wch: 30 },
+            { wch: 20 },
         ];
 
         worksheet["!cols"] = colWidths;
@@ -223,7 +215,6 @@ class ExportService {
         try {
             connection = await getConnection();
 
-            // Очищаем фильтры
             const cleanedFilters = this.cleanFilters(filters);
             console.log("Stats cleaned filters:", cleanedFilters);
 
@@ -235,7 +226,6 @@ class ExportService {
 
             const binds = {};
 
-            // Применяем только валидные фильтры
             if (cleanedFilters.dateFrom) {
                 query += ` AND cq.INIT_TIME >= :dateFrom`;
                 binds.dateFrom = new Date(cleanedFilters.dateFrom);

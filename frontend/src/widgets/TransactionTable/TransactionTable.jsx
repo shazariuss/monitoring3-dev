@@ -46,7 +46,6 @@ function TransactionTable() {
     const [loadingDetail, setLoadingDetail] = useState(false);
 
     useEffect(() => {
-        console.log("🔄 Filters changed, reloading transactions...");
         handleTableChange({ current: 1, pageSize: 10 });
     }, [filters]);
 
@@ -57,7 +56,6 @@ function TransactionTable() {
             ...filters,
         };
 
-        console.log("📋 Loading transactions with params:", params);
         dispatch(fetchTransactions(params));
     };
 
@@ -65,8 +63,6 @@ function TransactionTable() {
         try {
             setLoadingDetail(true);
             setDetailModalVisible(true);
-
-            console.log(`🔍 Loading transaction detail for ID: ${record.id}`);
 
             const response = await fetch(`/api/transactions/${record.id}`);
 
@@ -78,16 +74,10 @@ function TransactionTable() {
 
             const transactionDetail = await response.json();
 
-            console.log("✅ Transaction detail loaded:", {
-                id: transactionDetail.id,
-                hasJson: !!transactionDetail.json_data,
-                hasXml: !!transactionDetail.xml_data,
-            });
-
             setSelectedTransaction(transactionDetail);
         } catch (error) {
             console.error("❌ Error loading transaction detail:", error);
-            message.error("Failed to load transaction details");
+            message.error("Не удалось загрузить детали транзакции");
             setDetailModalVisible(false);
         } finally {
             setLoadingDetail(false);
@@ -100,43 +90,39 @@ function TransactionTable() {
         setLoadingDetail(false);
     };
 
-    // Безопасная функция подсчета ошибок
-    const getErrorCount = () => {
-        if (!transactions?.data || !Array.isArray(transactions.data)) {
-            return 0;
-        }
-        return transactions.data.filter((t) => t.error && t.error !== 0).length;
-    };
+    // const getErrorCount = () => {
+    //     if (!transactions?.data || !Array.isArray(transactions.data)) {
+    //         return 0;
+    //     }
+    //     return transactions.data.filter((t) => t.error && t.error !== 0).length;
+    // };
 
-    // Безопасная функция подсчета успешных транзакций
-    const getSuccessCount = () => {
-        if (!transactions?.data || !Array.isArray(transactions.data)) {
-            return 0;
-        }
-        return transactions.data.filter(
-            (t) => t.state === 9 && (!t.error || t.error === 0)
-        ).length;
-    };
+    // const getSuccessCount = () => {
+    //     if (!transactions?.data || !Array.isArray(transactions.data)) {
+    //         return 0;
+    //     }
+    //     return transactions.data.filter(
+    //         (t) => t.state === 9 && (!t.error || t.error === 0)
+    //     ).length;
+    // };
 
-    // Безопасная функция подсчета обрабатываемых транзакций
-    const getPendingCount = () => {
-        if (!transactions?.data || !Array.isArray(transactions.data)) {
-            return 0;
-        }
-        return transactions.data.filter((t) => [1, 2, 3].includes(t.state))
-            .length;
-    };
+    // const getPendingCount = () => {
+    //     if (!transactions?.data || !Array.isArray(transactions.data)) {
+    //         return 0;
+    //     }
+    //     return transactions.data.filter((t) => [1, 2, 3].includes(t.state))
+    //         .length;
+    // };
 
-    // Безопасная функция получения общего количества
-    const getTotalCount = () => {
-        if (!transactions?.data || !Array.isArray(transactions.data)) {
-            return 0;
-        }
-        return transactions.data.length;
-    };
+    // const getTotalCount = () => {
+    //     if (!transactions?.data || !Array.isArray(transactions.data)) {
+    //         return 0;
+    //     }
+    //     return transactions.data.length;
+    // };
 
     const formatDateTime = (dateTime) => {
-        if (!dateTime) return "N/A";
+        if (!dateTime) return "Н/Д";
         return dayjs(dateTime).format("DD/MM/YYYY HH:mm:ss");
     };
 
@@ -150,7 +136,7 @@ function TransactionTable() {
             sorter: true,
         },
         {
-            title: "Message ID",
+            title: "ID Сообщения",
             dataIndex: "message_id",
             key: "message_id",
             width: 150,
@@ -158,11 +144,11 @@ function TransactionTable() {
                 text ? (
                     <Text code>{text}</Text>
                 ) : (
-                    <Text type="secondary">N/A</Text>
+                    <Text type="secondary">Н/Д</Text>
                 ),
         },
         {
-            title: "Type",
+            title: "Тип",
             dataIndex: "type",
             key: "type",
             width: 200,
@@ -174,7 +160,7 @@ function TransactionTable() {
             ),
         },
         {
-            title: "Direction",
+            title: "Направление",
             dataIndex: "direction",
             key: "direction",
             width: 100,
@@ -182,7 +168,7 @@ function TransactionTable() {
             render: (direction) => <DirectionBadge direction={direction} />,
         },
         {
-            title: "Status",
+            title: "Статус",
             dataIndex: "state",
             key: "state",
             width: 120,
@@ -196,7 +182,7 @@ function TransactionTable() {
             ),
         },
         {
-            title: "Init Time",
+            title: "Время Инициации",
             dataIndex: "init_time",
             key: "init_time",
             width: 180,
@@ -215,7 +201,7 @@ function TransactionTable() {
             sorter: true,
         },
         {
-            title: "File Name",
+            title: "Имя Файла",
             dataIndex: "file_name",
             key: "file_name",
             width: 200,
@@ -229,11 +215,11 @@ function TransactionTable() {
                         </Text>
                     </Tooltip>
                 ) : (
-                    <Text type="secondary">N/A</Text>
+                    <Text type="secondary">Н/Д</Text>
                 ),
         },
         {
-            title: "Reference",
+            title: "Ссылка",
             dataIndex: "reference_",
             key: "reference_",
             width: 150,
@@ -241,17 +227,17 @@ function TransactionTable() {
                 text ? (
                     <Text code>{text}</Text>
                 ) : (
-                    <Text type="secondary">N/A</Text>
+                    <Text type="secondary">Н/Д</Text>
                 ),
         },
         {
-            title: "Actions",
+            title: "Действия",
             key: "actions",
             width: 100,
             align: "center",
             render: (_, record) => (
                 <Space>
-                    <Tooltip title="View Details">
+                    <Tooltip title="Просмотреть детали">
                         <Button
                             type="primary"
                             icon={<EyeOutlined />}
@@ -268,10 +254,11 @@ function TransactionTable() {
         <div className={styles.transactionTable}>
             {/* Statistics Cards */}
             {/* <Row gutter={16} className={styles.statsCards}>
+                <Col xs weak dependence on Ant Design components, which is good for maintainability but requires报警
                 <Col xs={24} sm={12} md={6}>
                     <Card size="small" className={styles.statCard}>
                         <Statistic
-                            title="Total Transactions"
+                            title="Всего транзакций"
                             value={getTotalCount()}
                             prefix={
                                 <ClockCircleOutlined
@@ -285,7 +272,7 @@ function TransactionTable() {
                 <Col xs={24} sm={12} md={6}>
                     <Card size="small" className={styles.statCard}>
                         <Statistic
-                            title="Successful"
+                            title="Успешные"
                             value={getSuccessCount()}
                             prefix={
                                 <CheckCircleOutlined
@@ -299,7 +286,7 @@ function TransactionTable() {
                 <Col xs={24} sm={12} md={6}>
                     <Card size="small" className={styles.statCard}>
                         <Statistic
-                            title="Processing"
+                            title="В обработке"
                             value={getPendingCount()}
                             prefix={
                                 <ExclamationCircleOutlined
@@ -313,7 +300,7 @@ function TransactionTable() {
                 <Col xs={24} sm={12} md={6}>
                     <Card size="small" className={styles.statCard}>
                         <Statistic
-                            title="Errors"
+                            title="Ошибки"
                             value={getErrorCount()}
                             prefix={
                                 <BugOutlined style={{ color: "#ff4d4f" }} />
@@ -328,13 +315,10 @@ function TransactionTable() {
             <Card
                 title={
                     <Space>
-                        <Text strong>SWIFT Transactions</Text>
-                        {/* <Text type="secondary" style={{ fontSize: '12px' }}>
-              Current User: tuitshoxrux | Time: 2025-06-18 04:49:00 UTC
-            </Text> */}
+                        <Text strong>Транзакции SWIFT</Text>
                         {lastUpdate && (
                             <Text type="secondary" style={{ fontSize: "12px" }}>
-                                | Last updated:{" "}
+                                | Последнее обновление:{" "}
                                 {dayjs(lastUpdate).format(
                                     "HH:mm:ss DD/MM/YYYY"
                                 )}
@@ -346,7 +330,7 @@ function TransactionTable() {
                     <Space>
                         <Badge
                             status={loading ? "processing" : "success"}
-                            text={loading ? "Loading..." : "Live"}
+                            text={loading ? "Загрузка..." : "Активно"}
                         />
                         <Button
                             icon={<ReloadOutlined spin={loading} />}
@@ -356,7 +340,7 @@ function TransactionTable() {
                             loading={loading}
                             size="small"
                         >
-                            Refresh
+                            Обновить
                         </Button>
                     </Space>
                 }
@@ -374,7 +358,7 @@ function TransactionTable() {
                         showSizeChanger: true,
                         showQuickJumper: true,
                         showTotal: (total, range) =>
-                            `${range[0]}-${range[1]} of ${total} transactions`,
+                            `${range[0]}-${range[1]} из ${total} транзакций`,
                         pageSizeOptions: ["10", "20", "50", "100"],
                         size: "small",
                     }}
@@ -391,7 +375,7 @@ function TransactionTable() {
                 title={
                     <Space>
                         <EyeOutlined />
-                        <span>Transaction Details</span>
+                        <span>Детали транзакции</span>
                         {selectedTransaction && (
                             <Tag color="blue">ID: {selectedTransaction.id}</Tag>
                         )}

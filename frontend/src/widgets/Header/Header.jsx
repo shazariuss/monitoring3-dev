@@ -19,6 +19,7 @@ import {
     UserOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
+import "dayjs/locale/ru";
 import relativeTime from "dayjs/plugin/relativeTime";
 import {
     fetchTransactions,
@@ -35,6 +36,7 @@ import ExportModal from "../ExportModal/ExportModal";
 import styles from "./Header.module.scss";
 
 dayjs.extend(relativeTime);
+dayjs.locale("ru");
 
 const { Header: AntHeader } = Layout;
 const { Title, Text } = Typography;
@@ -48,10 +50,8 @@ function Header() {
     const { loading } = useSelector((state) => state.transactions);
     const [exportModalVisible, setExportModalVisible] = useState(false);
 
-    // Используем хук авто-обновления
     const { refreshData } = useAutoRefresh();
 
-    // Проверяем статус подключения
     useEffect(() => {
         const handleOnline = () => dispatch(setOnlineStatus(true));
         const handleOffline = () => dispatch(setOnlineStatus(false));
@@ -83,12 +83,12 @@ function Header() {
 
     const getStatusBadge = () => {
         if (!isOnline) {
-            return <Badge status="error" text="Offline" />;
+            return <Badge status="error" text="Оффлайн" />;
         }
         if (loading) {
-            return <Badge status="processing" text="Updating..." />;
+            return <Badge status="processing" text="Обновление..." />;
         }
-        return <Badge status="success" text="Live" />;
+        return <Badge status="success" text="Онлайн" />;
     };
 
     const intervalOptions = [
@@ -101,18 +101,18 @@ function Header() {
     return (
         <>
             <AntHeader className={styles.header}>
-                <div className="container">
+                <div className={`container ${styles.container}`}>
                     <div className={styles.headerContent}>
                         <div className={styles.headerLeft}>
-                            <Title level={2} className={styles.title}>
+                            {/* <Title level={2} className={styles.title}>
                                 SWIFT Payment Monitor
-                            </Title>
+                            </Title> */}
                             <Space className={styles.status} size="middle">
                                 {getStatusBadge()}
                                 <Text type="secondary">•</Text>
                                 {lastUpdate && (
                                     <Tooltip
-                                        title={`Last updated: ${dayjs(
+                                        title={`Последнее обновление: ${dayjs(
                                             lastUpdate
                                         ).format("HH:mm:ss DD/MM/YYYY")}`}
                                     >
@@ -131,13 +131,13 @@ function Header() {
                             <Space size="middle">
                                 {/* Текущий пользователь */}
                                 <Space>
-                                    <UserOutlined />
-                                    {/* <Text>tuitshoxrux</Text> */}
+                                    {/* <UserOutlined /> */}
+                                    {/* <Text>User</Text> */}
                                 </Space>
 
                                 {/* Статус подключения */}
                                 <Tooltip
-                                    title={isOnline ? "Online" : "Offline"}
+                                    title={isOnline ? "Онлайн" : "Оффлайн"}
                                 >
                                     <WifiOutlined
                                         style={{
@@ -151,7 +151,9 @@ function Header() {
 
                                 {/* Настройки авто-обновления */}
                                 <Space>
-                                    <Text type="secondary">Auto-refresh:</Text>
+                                    <Text type="secondary">
+                                        Автообновление:
+                                    </Text>
                                     <Switch
                                         size="small"
                                         checked={autoRefresh}
@@ -183,14 +185,14 @@ function Header() {
                                         loading={loading}
                                         disabled={!isOnline}
                                     >
-                                        Refresh
+                                        Обновить
                                     </Button>
                                     <Button
                                         type="primary"
                                         icon={<DownloadOutlined />}
                                         onClick={handleExport}
                                     >
-                                        Export
+                                        Экспорт
                                     </Button>
                                 </Space>
                             </Space>
