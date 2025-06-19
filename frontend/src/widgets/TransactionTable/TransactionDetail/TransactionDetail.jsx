@@ -29,6 +29,7 @@ import StatusBadge from "../../../shared/components/StatusBadge/StatusBadge";
 import DirectionBadge from "../../../shared/components/DirectionBadge/DirectionBadge";
 import TypeBadge from "../../../shared/components/TypeBadge/TypeBadge";
 import CodeViewer from "../../../shared/components/CodeViewer/CodeViewer";
+import ProcessingTimes from "./components/ProcessingTimes";
 import styles from "./TransactionDetail.module.scss";
 
 const { TabPane } = Tabs;
@@ -532,6 +533,7 @@ function TransactionDetail({ transaction, loading }) {
                     </div>
                 </TabPane>
             </Tabs>
+            <ProcessingTimes transaction={transaction} />
         </div>
     );
 }
