@@ -13,8 +13,6 @@ const useFormTypes = () => {
             try {
                 const response = await fetch("/api/transactions/form-types");
 
-                console.log("📋 Form types response status:", response.status);
-
                 if (!response.ok) {
                     const errorText = await response.text();
                     console.error("📋 Form types error response:", errorText);

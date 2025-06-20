@@ -234,21 +234,6 @@ function Filters() {
                         </Form.Item>
                     </Col>
 
-                    {/* Поиск */}
-                    <Col xs={24} sm={12} md={4}>
-                        <Form.Item label="Поиск" name="search">
-                            <Input
-                                placeholder="ID, референс, файл..."
-                                prefix={<SearchOutlined />}
-                                onChange={(e) =>
-                                    handleSearchChange(e.target.value)
-                                }
-                                size="small"
-                                allowClear
-                            />
-                        </Form.Item>
-                    </Col>
-
                     {/* Статус сообщения */}
                     <Col xs={24} sm={12} md={4}>
                         <Form.Item
@@ -288,6 +273,20 @@ function Filters() {
                                     </Option>
                                 ))}
                             </Select>
+                        </Form.Item>
+                    </Col>
+                    {/* Поиск */}
+                    <Col xs={24} sm={12} md={4}>
+                        <Form.Item label="Поиск" name="search">
+                            <Input
+                                placeholder="ID, референс, файл..."
+                                prefix={<SearchOutlined />}
+                                onChange={(e) =>
+                                    handleSearchChange(e.target.value)
+                                }
+                                size="small"
+                                allowClear
+                            />
                         </Form.Item>
                     </Col>
 

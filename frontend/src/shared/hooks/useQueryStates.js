@@ -13,11 +13,6 @@ const useQueryStates = () => {
             try {
                 const response = await fetch("/api/transactions/query-states");
 
-                console.log(
-                    "📊 Query states response status:",
-                    response.status
-                );
-
                 if (!response.ok) {
                     const errorText = await response.text();
                     console.error("📊 Query states error response:", errorText);

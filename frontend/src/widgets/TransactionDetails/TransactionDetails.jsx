@@ -453,7 +453,7 @@ function TransactionDetails({ transaction, onClose }) {
                 </TabPane>
 
                 {/* Хронология */}
-                <TabPane
+                {/* <TabPane
                     tab={
                         <Space>
                             <HistoryOutlined />
@@ -497,7 +497,7 @@ function TransactionDetails({ transaction, onClose }) {
                             ))}
                         </Timeline>
                     </Card>
-                </TabPane>
+                </TabPane> */}
 
                 {/* JSON данные */}
                 <TabPane
@@ -529,22 +529,22 @@ function TransactionDetails({ transaction, onClose }) {
                                 message="Данные JSON недоступны"
                                 description="У этой транзакции отсутствуют исходные данные JSON."
                                 showIcon
-                                action={
-                                    transaction.file_name && (
-                                        <Button
-                                            size="small"
-                                            onClick={() =>
-                                                loadFileData(
-                                                    transaction.file_name,
-                                                    "json"
-                                                )
-                                            }
-                                            loading={loading}
-                                        >
-                                            Попробовать загрузить из файла
-                                        </Button>
-                                    )
-                                }
+                                // action={
+                                //     transaction.file_name && (
+                                //         <Button
+                                //             size="small"
+                                //             onClick={() =>
+                                //                 loadFileData(
+                                //                     transaction.file_name,
+                                //                     "json"
+                                //                 )
+                                //             }
+                                //             loading={loading}
+                                //         >
+                                //             Попробовать загрузить из файла
+                                //         </Button>
+                                //     )
+                                // }
                             />
                         )}
                     </div>
@@ -580,22 +580,22 @@ function TransactionDetails({ transaction, onClose }) {
                                 message="Данные XML недоступны"
                                 description="У этой транзакции отсутствуют исходные данные XML."
                                 showIcon
-                                action={
-                                    transaction.file_name && (
-                                        <Button
-                                            size="small"
-                                            onClick={() =>
-                                                loadFileData(
-                                                    transaction.file_name,
-                                                    "xml"
-                                                )
-                                            }
-                                            loading={loading}
-                                        >
-                                            Попробовать загрузить из файла
-                                        </Button>
-                                    )
-                                }
+                                // action={
+                                //     transaction.file_name && (
+                                //         <Button
+                                //             size="small"
+                                //             onClick={() =>
+                                //                 loadFileData(
+                                //                     transaction.file_name,
+                                //                     "xml"
+                                //                 )
+                                //             }
+                                //             loading={loading}
+                                //         >
+                                //             Попробовать загрузить из файла
+                                //         </Button>
+                                //     )
+                                // }
                             />
                         )}
                     </div>
