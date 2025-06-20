@@ -2,128 +2,294 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
     Table,
-    Card,
+    Tag,
     Space,
+    Typography,
+    Tooltip,
     Button,
     Modal,
-    message,
-    Tooltip,
-    Badge,
-    Row,
-    Col,
-    Statistic,
-    Typography,
-    Tag,
+    Spin,
+    Alert,
 } from "antd";
 import {
+    ExclamationCircleOutlined,
+    CheckCircleOutlined,
+    ClockCircleOutlined,
+    SyncOutlined,
+    SendOutlined,
+    QuestionCircleOutlined,
     EyeOutlined,
     ReloadOutlined,
-    ClockCircleOutlined,
-    CheckCircleOutlined,
-    ExclamationCircleOutlined,
-    BugOutlined,
+    DownloadOutlined,
 } from "@ant-design/icons";
-import dayjs from "dayjs";
-import { fetchTransactions } from "../../features/transactions/transactionSlice";
-import StatusBadge from "../../shared/components/StatusBadge/StatusBadge";
-import DirectionBadge from "../../shared/components/DirectionBadge/DirectionBadge";
-import TypeBadge from "../../shared/components/TypeBadge/TypeBadge";
-import TransactionDetail from "./TransactionDetail/TransactionDetail";
+import {
+    fetchTransactions,
+    setPage,
+    setPageSize,
+} from "../../features/transactions/transactionSlice";
+import {
+    setPage as setFiltersPage,
+    setLimit as setFiltersLimit,
+} from "../../features/filters/filtersSlice";
+import useMessageStates from "../../shared/hooks/useMessageStates";
+import useQueryStates from "../../shared/hooks/useQueryStates";
+// import TransactionDetail from "./TransactionDetail/TransactionDetail";
+import TransactionDetails from "../TransactionDetails/TransactionDetails";
 import styles from "./TransactionTable.module.scss";
 
-const { Text } = Typography;
+const { Text, Title } = Typography;
 
 function TransactionTable() {
     const dispatch = useDispatch();
-    const { transactions, loading, lastUpdate } = useSelector(
+    const { data, loading, error, pagination } = useSelector(
         (state) => state.transactions
     );
-
     const filters = useSelector((state) => state.filters);
+    const { messageStates } = useMessageStates();
+    const { queryStates } = useQueryStates();
 
     const [selectedTransaction, setSelectedTransaction] = useState(null);
-    const [detailModalVisible, setDetailModalVisible] = useState(false);
-    const [loadingDetail, setLoadingDetail] = useState(false);
+    const [detailsVisible, setDetailsVisible] = useState(false);
 
+    // Загрузка данных при изменении фильтров
     useEffect(() => {
-        handleTableChange({ current: 1, pageSize: 10 });
-    }, [filters]);
-
-    const handleTableChange = (paginationConfig, filtersConfig, sorter) => {
-        const params = {
-            page: paginationConfig.current,
-            limit: paginationConfig.pageSize,
-            ...filters,
+        const searchFilters = {
+            page: filters.page || 1,
+            limit: filters.limit || 10,
+            dateFrom: filters.dateFrom,
+            dateTo: filters.dateTo,
+            status: filters.status,
+            type: filters.type,
+            search: filters.search,
+            errorsOnly: filters.errorsOnly,
         };
 
-        dispatch(fetchTransactions(params));
+        dispatch(fetchTransactions(searchFilters));
+    }, [dispatch, filters]);
+
+    // Функция получения информации о статусе обработки
+    const getQueryStatusInfo = (state, statusName, statusColor) => {
+        // Используем данные из справочника R_QUERY_STATES
+        if (statusName) {
+            return {
+                name: statusName,
+                color: statusColor || getDefaultStatusColor(state),
+                icon: getStatusIcon(state),
+            };
+        }
+
+        // Фоллбэк если нет данных из справочника
+        const statusMap = {
+            0: {
+                name: "Инициализация",
+                color: "blue",
+                icon: <ClockCircleOutlined />,
+            },
+            1: {
+                name: "В обработке",
+                color: "processing",
+                icon: <SyncOutlined spin />,
+            },
+            2: {
+                name: "Валидация",
+                color: "warning",
+                icon: <ExclamationCircleOutlined />,
+            },
+            3: {
+                name: "Проверка",
+                color: "processing",
+                icon: <SyncOutlined />,
+            },
+            4: {
+                name: "Подготовка",
+                color: "processing",
+                icon: <SyncOutlined />,
+            },
+            5: {
+                name: "Отбракован",
+                color: "error",
+                icon: <ExclamationCircleOutlined />,
+            },
+            6: {
+                name: "Авторизован",
+                color: "success",
+                icon: <CheckCircleOutlined />,
+            },
+            7: {
+                name: "Принят",
+                color: "success",
+                icon: <CheckCircleOutlined />,
+            },
+            8: {
+                name: "Отправлен",
+                color: "processing",
+                icon: <SendOutlined />,
+            },
+            9: {
+                name: "Завершен",
+                color: "success",
+                icon: <CheckCircleOutlined />,
+            },
+        };
+
+        return (
+            statusMap[state] || {
+                name: `Статус ${state}`,
+                color: "default",
+                icon: <QuestionCircleOutlined />,
+            }
+        );
     };
 
-    const handleViewDetail = async (record) => {
-        try {
-            setLoadingDetail(true);
-            setDetailModalVisible(true);
+    // Функция получения информации о статусе сообщения
+    const getMessageStatusInfo = (status) => {
+        // Ищем в загруженных статусах сообщений
+        const messageState = messageStates.find(
+            (state) => state.code === status
+        );
 
-            const response = await fetch(`/api/transactions/${record.id}`);
+        if (messageState) {
+            return {
+                name: messageState.name,
+                color:
+                    messageState.color || getDefaultMessageStatusColor(status),
+            };
+        }
 
-            if (!response.ok) {
-                throw new Error(
-                    `HTTP ${response.status}: ${response.statusText}`
-                );
+        // Фоллбэк статусы
+        const statusMap = {
+            7: { name: "Отправлено", color: "success" },
+            9: { name: "Завершено", color: "success" },
+            11: { name: "Отклонено", color: "error" },
+        };
+
+        return (
+            statusMap[status] || {
+                name: status ? `Статус ${status}` : "Нет статуса",
+                color: "default",
             }
+        );
+    };
 
-            const transactionDetail = await response.json();
+    // Вспомогательные функции для цветов и иконок
+    const getStatusIcon = (state) => {
+        const iconMap = {
+            0: <ClockCircleOutlined />,
+            1: <SyncOutlined spin />,
+            2: <ExclamationCircleOutlined />,
+            3: <SyncOutlined />,
+            4: <SyncOutlined />,
+            5: <ExclamationCircleOutlined />,
+            6: <CheckCircleOutlined />,
+            7: <CheckCircleOutlined />,
+            8: <SendOutlined />,
+            9: <CheckCircleOutlined />,
+        };
+        return iconMap[state] || <QuestionCircleOutlined />;
+    };
 
-            setSelectedTransaction(transactionDetail);
+    const getDefaultStatusColor = (state) => {
+        const colorMap = {
+            0: "blue",
+            1: "processing",
+            2: "warning",
+            3: "processing",
+            4: "processing",
+            5: "error",
+            6: "success",
+            7: "success",
+            8: "processing",
+            9: "success",
+        };
+        return colorMap[state] || "default";
+    };
+
+    const getDefaultMessageStatusColor = (status) => {
+        const colorMap = {
+            7: "success",
+            9: "success",
+            11: "error",
+        };
+        return colorMap[status] || "default";
+    };
+
+    // Функция форматирования даты
+    const formatDateTime = (dateString) => {
+        if (!dateString) return "-";
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleString("ru-RU", {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+            });
         } catch (error) {
-            console.error("❌ Error loading transaction detail:", error);
-            message.error("Не удалось загрузить детали транзакции");
-            setDetailModalVisible(false);
-        } finally {
-            setLoadingDetail(false);
+            return dateString;
         }
     };
 
-    const handleCloseDetail = () => {
-        setDetailModalVisible(false);
-        setSelectedTransaction(null);
-        setLoadingDetail(false);
+    // Функция получения типа направления
+    const getDirectionInfo = (direction) => {
+        const directionMap = {
+            1: { name: "Входящий", color: "green" },
+            2: { name: "Исходящий", color: "blue" },
+        };
+        return (
+            directionMap[direction] || {
+                name: `Направление ${direction}`,
+                color: "default",
+            }
+        );
     };
 
-    // const getErrorCount = () => {
-    //     if (!transactions?.data || !Array.isArray(transactions.data)) {
-    //         return 0;
-    //     }
-    //     return transactions.data.filter((t) => t.error && t.error !== 0).length;
-    // };
+    // Обработчик просмотра деталей
+    const handleViewDetails = (record) => {
+        setSelectedTransaction(record);
+        setDetailsVisible(true);
+    };
 
-    // const getSuccessCount = () => {
-    //     if (!transactions?.data || !Array.isArray(transactions.data)) {
-    //         return 0;
-    //     }
-    //     return transactions.data.filter(
-    //         (t) => t.state === 9 && (!t.error || t.error === 0)
-    //     ).length;
-    // };
+    // Обработчик скачивания файла
+    const handleDownloadFile = (fileName, type = "request") => {
+        if (!fileName) return;
 
-    // const getPendingCount = () => {
-    //     if (!transactions?.data || !Array.isArray(transactions.data)) {
-    //         return 0;
-    //     }
-    //     return transactions.data.filter((t) => [1, 2, 3].includes(t.state))
-    //         .length;
-    // };
+        // Здесь будет логика скачивания файла
+        const downloadUrl = `/api/files/download?file=${encodeURIComponent(
+            fileName
+        )}&type=${type}`;
+        window.open(downloadUrl, "_blank");
+    };
 
-    // const getTotalCount = () => {
-    //     if (!transactions?.data || !Array.isArray(transactions.data)) {
-    //         return 0;
-    //     }
-    //     return transactions.data.length;
-    // };
+    // Обработчик обновления данных
+    const handleRefresh = () => {
+        const searchFilters = {
+            page: filters.page || 1,
+            limit: filters.limit || 10,
+            dateFrom: filters.dateFrom,
+            dateTo: filters.dateTo,
+            status: filters.status,
+            type: filters.type,
+            search: filters.search,
+            errorsOnly: filters.errorsOnly,
+        };
 
-    const formatDateTime = (dateTime) => {
-        if (!dateTime) return "Н/Д";
-        return dayjs(dateTime).format("DD/MM/YYYY HH:mm:ss");
+        dispatch(fetchTransactions(searchFilters));
+    };
+
+    // ИСПРАВЛЕННЫЕ обработчики пагинации
+    const handlePageChange = (page, pageSize) => {
+        // Обновляем состояние фильтров
+        dispatch(setFiltersPage(page));
+        if (pageSize !== filters.limit) {
+            dispatch(setFiltersLimit(pageSize));
+        }
+    };
+
+    const handlePageSizeChange = (current, size) => {
+        dispatch(setFiltersLimit(size));
+        dispatch(setFiltersPage(1));
     };
 
     const columns = [
@@ -131,267 +297,285 @@ function TransactionTable() {
             title: "ID",
             dataIndex: "id",
             key: "id",
-            width: 120,
-            render: (text) => <Text code>{text}</Text>,
-            sorter: true,
+            width: 60,
+            fixed: "left",
+            align: "center",
+            render: (text) => (
+                <Text code style={{ fontSize: "16px" }}>
+                    {text}
+                </Text>
+            ),
         },
         {
-            title: "ID Сообщения",
-            dataIndex: "message_id",
-            key: "message_id",
-            width: 150,
-            render: (text) =>
-                text ? (
-                    <Text code>{text}</Text>
-                ) : (
-                    <Text type="secondary">Н/Д</Text>
-                ),
+            title: "Время создания",
+            dataIndex: "init_time",
+            key: "init_time",
+            align: "center",
+            width: 60,
+            render: (text) => (
+                <Text style={{ fontSize: "12px" }}>{formatDateTime(text)}</Text>
+            ),
         },
         {
             title: "Тип",
             dataIndex: "type",
             key: "type",
-            width: 200,
+            width: 60,
+            align: "center",
             render: (text, record) => (
-                <TypeBadge
-                    type={text}
-                    typeDescription={record.type_description}
-                />
+                <Space direction="vertical" size={1}>
+                    <Tag color="blue" style={{ fontSize: "10px" }}>
+                        {text}
+                    </Tag>
+                    {record.type_short_title && (
+                        <Text type="secondary" style={{ fontSize: "9px" }}>
+                            {record.type_short_title}
+                        </Text>
+                    )}
+                </Space>
             ),
         },
         {
             title: "Направление",
             dataIndex: "direction",
             key: "direction",
-            width: 100,
+            width: 60,
             align: "center",
-            render: (direction) => <DirectionBadge direction={direction} />,
+
+            render: (direction) => {
+                const directionInfo = getDirectionInfo(direction);
+                return (
+                    <Tag
+                        color={directionInfo.color}
+                        style={{ fontSize: "12px" }}
+                    >
+                        {directionInfo.name}
+                    </Tag>
+                );
+            },
         },
         {
             title: "Статус",
-            dataIndex: "state",
-            key: "state",
-            width: 120,
-            align: "center",
-            render: (state, record) => (
-                <StatusBadge
-                    state={state}
-                    error={record.error}
-                    errorMessage={record.error_message}
-                />
-            ),
-        },
-        {
-            title: "Время Инициации",
-            dataIndex: "init_time",
-            key: "init_time",
+            key: "status",
             width: 180,
-            render: (dateTime) => (
-                <Tooltip title={formatDateTime(dateTime)}>
-                    <Space direction="vertical" size={0}>
-                        <Text style={{ fontSize: "12px" }}>
-                            {dayjs(dateTime).format("DD/MM/YYYY")}
-                        </Text>
-                        <Text type="secondary" style={{ fontSize: "11px" }}>
-                            {dayjs(dateTime).format("HH:mm:ss")}
-                        </Text>
+            render: (_, record) => {
+                const queryStatusInfo = getQueryStatusInfo(
+                    record.conv_state,
+                    record.conv_status_name,
+                    record.conv_status_color
+                );
+                const messageStatusInfo = getMessageStatusInfo(
+                    record.message_status
+                );
+                const hasError = record.error && record.error !== 0;
+
+                return (
+                    <Space direction="vertical" size={2}>
+                        {/* Статус обработки (из CONV_QUERIES) */}
+                        <div>
+                            <Text type="secondary" style={{ fontSize: "12px" }}>
+                                Обработка:
+                            </Text>
+                            <Tag
+                                icon={queryStatusInfo.icon}
+                                color={queryStatusInfo.color}
+                                style={{ fontSize: "12px", marginLeft: 4 }}
+                            >
+                                {queryStatusInfo.name}
+                            </Tag>
+                        </div>
+
+                        {/* Статус сообщения (из MESSAGES) если есть */}
+                        {record.message_status && (
+                            <div>
+                                <Text
+                                    type="secondary"
+                                    style={{ fontSize: "12px" }}
+                                >
+                                    Сообщение:
+                                </Text>
+                                <Tag
+                                    color={messageStatusInfo.color}
+                                    style={{ fontSize: "9px", marginLeft: 4 }}
+                                >
+                                    {messageStatusInfo.name}
+                                </Tag>
+                            </div>
+                        )}
+
+                        {/* Ошибка если есть */}
+                        {hasError && (
+                            <Tooltip
+                                title={
+                                    record.error_description ||
+                                    `Ошибка: ${record.error}`
+                                }
+                            >
+                                <Tag
+                                    icon={<ExclamationCircleOutlined />}
+                                    color="red"
+                                    size="small"
+                                    style={{ fontSize: "12px" }}
+                                >
+                                    Ошибка: {record.error}
+                                </Tag>
+                            </Tooltip>
+                        )}
                     </Space>
-                </Tooltip>
-            ),
-            sorter: true,
+                );
+            },
         },
         {
-            title: "Имя Файла",
-            dataIndex: "file_name",
-            key: "file_name",
-            width: 200,
-            render: (text) =>
-                text ? (
-                    <Tooltip title={text}>
-                        <Text code style={{ fontSize: "11px" }}>
-                            {text.length > 25
-                                ? `${text.substring(0, 25)}...`
-                                : text}
-                        </Text>
-                    </Tooltip>
-                ) : (
-                    <Text type="secondary">Н/Д</Text>
-                ),
-        },
-        {
-            title: "Ссылка",
+            title: "Референс",
             dataIndex: "reference_",
-            key: "reference_",
-            width: 150,
-            render: (text) =>
-                text ? (
-                    <Text code>{text}</Text>
-                ) : (
-                    <Text type="secondary">Н/Д</Text>
-                ),
+            key: "reference",
+            width: 140,
+            render: (text) => (
+                <Text code style={{ fontSize: "11px" }}>
+                    {text || "-"}
+                </Text>
+            ),
         },
+        // {
+        //     title: "Файлы",
+        //     key: "files",
+        //     width: 120,
+        //     render: (_, record) => (
+        //         <Space direction="vertical" size={1}>
+        //             {record.file_name && (
+        //                 <Button
+        //                     type="link"
+        //                     size="small"
+        //                     icon={<DownloadOutlined />}
+        //                     onClick={() =>
+        //                         handleDownloadFile(record.file_name, "request")
+        //                     }
+        //                     style={{ fontSize: "10px", padding: 0 }}
+        //                 >
+        //                     Запрос
+        //                 </Button>
+        //             )}
+        //             {record.res_file_name && (
+        //                 <Button
+        //                     type="link"
+        //                     size="small"
+        //                     icon={<DownloadOutlined />}
+        //                     onClick={() =>
+        //                         handleDownloadFile(
+        //                             record.res_file_name,
+        //                             "response"
+        //                         )
+        //                     }
+        //                     style={{ fontSize: "10px", padding: 0 }}
+        //                 >
+        //                     Ответ
+        //                 </Button>
+        //             )}
+        //         </Space>
+        //     ),
+        // },
         {
             title: "Действия",
             key: "actions",
-            width: 100,
+            width: 60,
+            fixed: "right",
             align: "center",
             render: (_, record) => (
-                <Space>
-                    <Tooltip title="Просмотреть детали">
-                        <Button
-                            type="primary"
-                            icon={<EyeOutlined />}
-                            size="small"
-                            onClick={() => handleViewDetail(record)}
-                        />
-                    </Tooltip>
-                </Space>
+                <Button
+                    type="primary"
+                    size="small"
+                    icon={<EyeOutlined />}
+                    onClick={() => handleViewDetails(record)}
+                >
+                    Детали
+                </Button>
             ),
         },
     ];
 
+    // ИСПРАВЛЕННАЯ конфигурация пагинации
+    const paginationConfig = {
+        current: filters.page || 1,
+        pageSize: filters.limit || 10,
+        total: pagination?.total || 0,
+        showSizeChanger: false,
+        showTotal: (total, range) =>
+            `${range[0]}-${range[1]} из ${total} записей`,
+        onChange: handlePageChange,
+        onShowSizeChange: handlePageSizeChange,
+    };
+
+    // Обработка ошибок
+    if (error) {
+        return (
+            <Alert
+                message="Ошибка загрузки данных"
+                description={error}
+                type="error"
+                showIcon
+                action={
+                    <Button size="small" onClick={handleRefresh}>
+                        Повторить
+                    </Button>
+                }
+            />
+        );
+    }
+
     return (
         <div className={styles.transactionTable}>
-            {/* Statistics Cards */}
-            {/* <Row gutter={16} className={styles.statsCards}>
-                <Col xs weak dependence on Ant Design components, which is good for maintainability but requires报警
-                <Col xs={24} sm={12} md={6}>
-                    <Card size="small" className={styles.statCard}>
-                        <Statistic
-                            title="Всего транзакций"
-                            value={getTotalCount()}
-                            prefix={
-                                <ClockCircleOutlined
-                                    style={{ color: "#1890ff" }}
-                                />
-                            }
-                            valueStyle={{ color: "#1890ff" }}
-                        />
-                    </Card>
-                </Col>
-                <Col xs={24} sm={12} md={6}>
-                    <Card size="small" className={styles.statCard}>
-                        <Statistic
-                            title="Успешные"
-                            value={getSuccessCount()}
-                            prefix={
-                                <CheckCircleOutlined
-                                    style={{ color: "#52c41a" }}
-                                />
-                            }
-                            valueStyle={{ color: "#52c41a" }}
-                        />
-                    </Card>
-                </Col>
-                <Col xs={24} sm={12} md={6}>
-                    <Card size="small" className={styles.statCard}>
-                        <Statistic
-                            title="В обработке"
-                            value={getPendingCount()}
-                            prefix={
-                                <ExclamationCircleOutlined
-                                    style={{ color: "#faad14" }}
-                                />
-                            }
-                            valueStyle={{ color: "#faad14" }}
-                        />
-                    </Card>
-                </Col>
-                <Col xs={24} sm={12} md={6}>
-                    <Card size="small" className={styles.statCard}>
-                        <Statistic
-                            title="Ошибки"
-                            value={getErrorCount()}
-                            prefix={
-                                <BugOutlined style={{ color: "#ff4d4f" }} />
-                            }
-                            valueStyle={{ color: "#ff4d4f" }}
-                        />
-                    </Card>
-                </Col>
-            </Row> */}
+            {/* Заголовок с кнопкой обновления */}
+            <div className={styles.header}>
+                <Title level={4} style={{ margin: 0 }}>
+                    Транзакции SWIFT
+                </Title>
+                <Space>
+                    <Text type="secondary" style={{ fontSize: "12px" }}>
+                        Обновлено: {new Date().toLocaleTimeString("ru-RU")}
+                    </Text>
+                    <Button
+                        icon={<ReloadOutlined />}
+                        onClick={handleRefresh}
+                        loading={loading}
+                        size="small"
+                    >
+                        Обновить
+                    </Button>
+                </Space>
+            </div>
 
-            {/* Main Table */}
-            <Card
-                title={
-                    <Space>
-                        <Text strong>Транзакции SWIFT</Text>
-                        {lastUpdate && (
-                            <Text type="secondary" style={{ fontSize: "12px" }}>
-                                | Последнее обновление:{" "}
-                                {dayjs(lastUpdate).format(
-                                    "HH:mm:ss DD/MM/YYYY"
-                                )}
-                            </Text>
-                        )}
-                    </Space>
-                }
-                extra={
-                    <Space>
-                        <Badge
-                            status={loading ? "processing" : "success"}
-                            text={loading ? "Загрузка..." : "Активно"}
-                        />
-                        <Button
-                            icon={<ReloadOutlined spin={loading} />}
-                            onClick={() =>
-                                handleTableChange({ current: 1, pageSize: 10 })
-                            }
-                            loading={loading}
-                            size="small"
-                        >
-                            Обновить
-                        </Button>
-                    </Space>
-                }
+            {/* Основная таблица */}
+            <Table
+                columns={columns}
+                dataSource={data}
+                loading={loading}
+                pagination={paginationConfig}
+                scroll={{ x: 1200, y: 600 }}
                 size="small"
-                className={styles.tableCard}
-            >
-                <Table
-                    columns={columns}
-                    dataSource={transactions?.data || []}
-                    loading={loading}
-                    pagination={{
-                        current: transactions?.pagination?.current || 1,
-                        pageSize: transactions?.pagination?.pageSize || 10,
-                        total: transactions?.pagination?.total || 0,
-                        showSizeChanger: true,
-                        showQuickJumper: true,
-                        showTotal: (total, range) =>
-                            `${range[0]}-${range[1]} из ${total} транзакций`,
-                        pageSizeOptions: ["10", "20", "50", "100"],
-                        size: "small",
-                    }}
-                    onChange={handleTableChange}
-                    rowKey="id"
-                    size="small"
-                    scroll={{ x: 1200 }}
-                    className={styles.transactionTableInner}
-                />
-            </Card>
+                rowKey="id"
+                className={styles.table}
+            />
 
-            {/* Transaction Detail Modal */}
+            {/* Модальное окно с TransactionDetails компонентом */}
             <Modal
-                title={
-                    <Space>
-                        <EyeOutlined />
-                        <span>Детали транзакции</span>
-                        {selectedTransaction && (
-                            <Tag color="blue">ID: {selectedTransaction.id}</Tag>
-                        )}
-                    </Space>
-                }
-                open={detailModalVisible}
-                onCancel={handleCloseDetail}
+                title={`Детали транзакции #${selectedTransaction?.id}`}
+                open={detailsVisible}
+                onCancel={() => setDetailsVisible(false)}
                 footer={null}
                 width="90%"
                 style={{ top: 20 }}
-                className={styles.detailModal}
+                bodyStyle={{
+                    padding: 0,
+                    maxHeight: "calc(100vh - 200px)",
+                    overflow: "auto",
+                }}
             >
-                <TransactionDetail
-                    transaction={selectedTransaction}
-                    loading={loadingDetail}
-                />
+                {selectedTransaction && (
+                    <TransactionDetails
+                        transaction={selectedTransaction}
+                        onClose={() => setDetailsVisible(false)}
+                    />
+                )}
             </Modal>
         </div>
     );

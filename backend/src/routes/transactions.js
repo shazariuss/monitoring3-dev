@@ -1,27 +1,21 @@
 const express = require("express");
+const router = express.Router();
 const transactionController = require("../controllers/transactionController");
 
-const router = express.Router();
-
-// Получить список транзакций
+// Основные роуты
 router.get("/", transactionController.getTransactions);
-
-// Получить статистику транзакций
 router.get("/stats", transactionController.getStats);
 
-// Получить типы форм
+// Справочники - ВАЖНО: эти роуты должны быть ДО роута /:id
 router.get("/form-types", transactionController.getFormTypes);
-
-// Получить коды ошибок
+router.get("/query-states", transactionController.getQueryStates);
+router.get("/message-states", transactionController.getMessageStates);
 router.get("/errors", transactionController.getErrors);
 
-// Получить статусы сообщений - НОВЫЙ РОУТ
-router.get("/message-states", transactionController.getMessageStates);
+// Роут для конкретной транзакции - ДОЛЖЕН быть ПОСЛЕДНИМ
+router.get("/:id", transactionController.getTransactionById);
 
 // Тест соединения
-router.get("/test", transactionController.testConnection);
-
-// Получить конкретную транзакцию по ID
-router.get("/:id", transactionController.getTransactionById);
+router.get("/test/connection", transactionController.testConnection);
 
 module.exports = router;

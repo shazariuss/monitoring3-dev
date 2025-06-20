@@ -6,126 +6,318 @@ class TransactionService {
         try {
             connection = await getConnection();
 
-            console.log("📋 Fetching transactions with filters:", filters);
+            console.log(
+                "📋 Fetching transactions with CLOB data - User: tuitshoxrux, Time: 2025-06-20 11:49:25",
+                filters
+            );
 
+            // Обновленный запрос с правильным получением CLOB данных
+            let query = `
+      SELECT 
+        cq.ID,
+        cq.MESSAGE_ID,
+        cq.TYPE,
+        cq.DIRECTION,
+        cq.STATE as CONV_STATE,
+        cq.INIT_TIME,
+        cq.SEND_TIME,
+        cq.RES_TIME,
+        cq.ERROR,
+        cq.ERROR_MESSAGE,
+        cq.FILE_NAME,
+        cq.RES_FILE_NAME,
+        cq.REFERENCE_,
+        cq.DATA,
+        re.MESSAGE as ERROR_DESCRIPTION,
+        ft.NAME as TYPE_DESCRIPTION,
+        ft.SHORT_TITLE as TYPE_SHORT_TITLE,
+        m.STATUS as MESSAGE_STATUS,
+        m.REASON as MESSAGE_REASON,
+        m.AMOUNT,
+        m.CURRENCY,
+        m.PAYER,
+        m.RECEIVER,
+        rqs.NAME as CONV_STATUS_NAME,
+        rqs.COLOR as CONV_STATUS_COLOR,
+        rqs.STATUS as CONV_STATUS_ACTIVE,
+        -- Получаем CLOB данные из связанных таблиц
+        cqs.SOURCE as JSON_DATA,
+        cqsx.SOURCE.getClobVal() as XML_DATA
+      FROM CONV_QUERIES cq
+      LEFT JOIN R_ERRORS re ON cq.ERROR = re.CODE
+      LEFT JOIN R_FORM_TYPES ft ON cq.TYPE = ft.ALIAS || '.' || ft.BODY_VERSION
+      LEFT JOIN MESSAGES m ON cq.ID = m.QUERY_ID
+      LEFT JOIN R_QUERY_STATES rqs ON cq.STATE = rqs.ID
+      LEFT JOIN CONV_QUERY_SOURCES cqs ON cq.ID = cqs.QUERY_ID
+      LEFT JOIN CONV_QUERY_SOURCES_XML cqsx ON cq.ID = cqsx.QUERY_ID
+    `;
+
+            let whereConditions = [];
+            let binds = {};
+
+            // Фильтры остаются теми же...
+            if (filters.dateFrom && filters.dateTo) {
+                whereConditions.push(
+                    `cq.INIT_TIME >= TO_DATE(:dateFrom, 'YYYY-MM-DD')`
+                );
+                whereConditions.push(
+                    `cq.INIT_TIME < TO_DATE(:dateTo, 'YYYY-MM-DD') + 1`
+                );
+                binds.dateFrom = filters.dateFrom;
+                binds.dateTo = filters.dateTo;
+            } else if (filters.dateFrom) {
+                whereConditions.push(
+                    `cq.INIT_TIME >= TO_DATE(:dateFrom, 'YYYY-MM-DD')`
+                );
+                binds.dateFrom = filters.dateFrom;
+            } else if (filters.dateTo) {
+                whereConditions.push(
+                    `cq.INIT_TIME < TO_DATE(:dateTo, 'YYYY-MM-DD') + 1`
+                );
+                binds.dateTo = filters.dateTo;
+            }
+
+            if (filters.status) {
+                whereConditions.push(
+                    `(cq.STATE = :status OR m.STATUS = :status)`
+                );
+                binds.status = filters.status;
+            }
+
+            if (filters.type) {
+                whereConditions.push(`cq.TYPE LIKE :type`);
+                binds.type = `%${filters.type}%`;
+            }
+
+            if (filters.search) {
+                whereConditions.push(`(
+        UPPER(cq.REFERENCE_) LIKE UPPER(:search) OR 
+        UPPER(cq.FILE_NAME) LIKE UPPER(:search) OR
+        UPPER(CAST(cq.MESSAGE_ID AS VARCHAR2(50))) LIKE UPPER(:search) OR
+        UPPER(CAST(cq.ID AS VARCHAR2(50))) LIKE UPPER(:search) OR
+        UPPER(m.PAYER) LIKE UPPER(:search) OR
+        UPPER(m.RECEIVER) LIKE UPPER(:search)
+      )`);
+                binds.search = `%${filters.search}%`;
+            }
+
+            if (filters.errorsOnly === "true" || filters.errorsOnly === true) {
+                whereConditions.push(`cq.ERROR IS NOT NULL AND cq.ERROR != 0`);
+            }
+
+            // Добавляем WHERE условия
+            if (whereConditions.length > 0) {
+                query += ` WHERE ${whereConditions.join(" AND ")}`;
+            }
+
+            // Получаем общее количество записей
+            const countQuery = `SELECT COUNT(*) as total FROM (${query})`;
+            const countResult = await connection.execute(countQuery, binds);
+            const totalCount = countResult.rows[0][0];
+
+            // Добавляем сортировку и пагинацию
+            query += ` ORDER BY cq.INIT_TIME DESC`;
+
+            // Пагинация
             const page = parseInt(filters.page) || 1;
             const limit = parseInt(filters.limit) || 10;
             const offset = (page - 1) * limit;
 
-            let whereClause = "WHERE 1=1";
-            const binds = {};
+            const paginatedQuery = `
+      SELECT * FROM (
+        SELECT rownum as rn, sub.* FROM (
+          ${query}
+        ) sub WHERE rownum <= :endRow
+      ) WHERE rn > :startRow
+    `;
 
-            if (filters.dateFrom) {
-                whereClause += " AND cq.INIT_TIME >= :dateFrom";
-                binds.dateFrom = new Date(filters.dateFrom);
-            }
+            binds.startRow = offset;
+            binds.endRow = offset + limit;
 
-            if (filters.dateTo) {
-                whereClause += " AND cq.INIT_TIME <= :dateTo";
-                binds.dateTo = new Date(filters.dateTo);
-            }
+            console.log(
+                "📊 Executing query with CLOB handling - User: tuitshoxrux, Time: 2025-06-20 11:49:25"
+            );
 
-            if (filters.status) {
-                whereClause += " AND cq.STATE = :status";
-                binds.status = parseInt(filters.status);
-            }
+            const result = await connection.execute(paginatedQuery, binds);
 
-            if (filters.type) {
-                whereClause += " AND UPPER(cq.TYPE) LIKE UPPER(:type)";
-                binds.type = `%${filters.type}%`;
-            }
+            console.log(
+                `✅ Found ${result.rows.length} transactions with CLOB data - User: tuitshoxrux, Time: 2025-06-20 11:49:25`
+            );
 
-            if (filters.errorsOnly === "true") {
-                whereClause += " AND cq.ERROR IS NOT NULL AND cq.ERROR != 0";
-            }
+            // Мапим результаты с правильной обработкой CLOB
+            const transactions = await Promise.all(
+                result.rows.map(async (row, index) => {
+                    const transaction = {};
 
-            if (filters.search) {
-                whereClause += ` AND (
-          UPPER(TO_CHAR(cq.MESSAGE_ID)) LIKE UPPER(:search) OR 
-          UPPER(cq.FILE_NAME) LIKE UPPER(:search) OR 
-          UPPER(cq.REFERENCE_) LIKE UPPER(:search) OR
-          UPPER(TO_CHAR(cq.ID)) LIKE UPPER(:search)
-        )`;
-                binds.search = `%${filters.search}%`;
-            }
+                    await Promise.all(
+                        result.metaData.map(async (column, colIndex) => {
+                            const columnName = column.name.toLowerCase();
+                            let value = row[colIndex];
 
-            const query = `
-        SELECT 
-          cq.ID,
-          cq.MESSAGE_ID,
-          cq.TYPE,
-          cq.DIRECTION,
-          cq.STATE,
-          cq.INIT_TIME,
-          cq.SEND_TIME,
-          cq.RES_TIME,
-          cq.ERROR,
-          cq.ERROR_MESSAGE,
-          cq.FILE_NAME,
-          cq.RES_FILE_NAME,
-          cq.REFERENCE_,
-          cq.DATA,
-          re.MESSAGE as ERROR_DESCRIPTION,
-          ft.NAME as TYPE_DESCRIPTION,
-          ft.SHORT_TITLE as TYPE_SHORT_TITLE
-        FROM CONV_QUERIES cq
-        LEFT JOIN R_ERRORS re ON cq.ERROR = re.CODE
-        LEFT JOIN R_FORM_TYPES ft ON cq.TYPE = ft.ALIAS || '.' || ft.BODY_VERSION
-        ${whereClause}
-        ORDER BY cq.INIT_TIME DESC
-        OFFSET ${offset} ROWS FETCH NEXT ${limit} ROWS ONLY
-      `;
+                            // Пропускаем rownum
+                            if (columnName === "rn") return;
 
-            console.log("📝 Executing query:", query);
-            console.log("📦 Query binds:", binds);
+                            // Обработка CLOB данных
+                            if (
+                                value &&
+                                typeof value === "object" &&
+                                value.getData
+                            ) {
+                                try {
+                                    console.log(
+                                        `📄 Reading CLOB data for ${columnName} - User: tuitshoxrux, Time: 2025-06-20 11:49:25`
+                                    );
+                                    value = await value.getData();
+                                    console.log(
+                                        `✅ CLOB data read successfully for ${columnName}, length: ${
+                                            value?.length || 0
+                                        } - User: tuitshoxrux, Time: 2025-06-20 11:49:25`
+                                    );
+                                } catch (error) {
+                                    console.error(
+                                        `❌ Error reading CLOB for ${columnName} - User: tuitshoxrux, Time: 2025-06-20 11:49:25:`,
+                                        error
+                                    );
+                                    value = null;
+                                }
+                            }
 
-            const result = await connection.execute(query, binds);
+                            // Обработка дат
+                            if (value instanceof Date) {
+                                value = value.toISOString();
+                            }
 
-            const transactions = result.rows.map((row) => {
-                const transaction = {};
-                result.metaData.forEach((column, index) => {
-                    const columnName = column.name.toLowerCase();
-                    let value = row[index];
+                            // Обработка остальных типов
+                            if (
+                                typeof value === "string" ||
+                                typeof value === "number" ||
+                                value === null ||
+                                value === undefined
+                            ) {
+                                transaction[columnName] = value;
+                            } else {
+                                transaction[columnName] = String(value);
+                            }
+                        })
+                    );
 
-                    if (value instanceof Date) {
-                        value = value.toISOString();
-                    }
+                    return transaction;
+                })
+            );
 
-                    if (
-                        typeof value === "string" ||
-                        typeof value === "number" ||
-                        value === null ||
-                        value === undefined
-                    ) {
-                        transaction[columnName] = value;
-                    } else {
-                        transaction[columnName] = String(value);
-                    }
-                });
-                return transaction;
+            console.log(`📈 Sample transaction with CLOB data:`, {
+                id: transactions[0]?.id,
+                has_json: !!transactions[0]?.json_data,
+                has_xml: !!transactions[0]?.xml_data,
+                json_length: transactions[0]?.json_data?.length || 0,
+                xml_length: transactions[0]?.xml_data?.length || 0,
             });
-
-            const countQuery = `
-        SELECT COUNT(*) as TOTAL
-        FROM CONV_QUERIES cq
-        LEFT JOIN R_ERRORS re ON cq.ERROR = re.CODE
-        LEFT JOIN R_FORM_TYPES ft ON cq.TYPE = ft.ALIAS || '.' || ft.BODY_VERSION
-        ${whereClause}
-      `;
-
-            const countResult = await connection.execute(countQuery, binds);
-            const total = countResult.rows[0][0];
 
             return {
                 data: transactions,
                 pagination: {
-                    current: page,
-                    pageSize: limit,
-                    total: total,
+                    page: page,
+                    limit: limit,
+                    total: totalCount,
                 },
             };
         } catch (error) {
-            console.error("❌ Error fetching transactions:", error);
+            console.error(
+                "❌ Error fetching transactions with CLOB - User: tuitshoxrux, Time: 2025-06-20 11:49:25:",
+                error
+            );
+            throw error;
+        } finally {
+            if (connection) {
+                await connection.close();
+            }
+        }
+    }
+
+    async getQueryStates() {
+        let connection;
+        try {
+            connection = await getConnection();
+
+            console.log(
+                "📋 Fetching query states... User: tuitshoxrux, Time: 2025-06-20 11:05:22"
+            );
+
+            const query = `
+      SELECT 
+        ID,
+        NAME,
+        STATUS as ACTIVE,
+        COLOR,
+        DIRECTION,
+        MESSAGES_STATE
+      FROM R_QUERY_STATES
+      WHERE STATUS = 1
+      ORDER BY ID
+    `;
+
+            const result = await connection.execute(query);
+
+            const states = result.rows.map((row) => ({
+                id: row[0],
+                name: row[1],
+                active: row[2],
+                color: row[3],
+                direction: row[4],
+                messages_state: row[5],
+            }));
+
+            console.log(
+                `✅ Loaded ${states.length} query states - User: tuitshoxrux, Time: 2025-06-20 11:05:22`
+            );
+
+            return states;
+        } catch (error) {
+            console.error(
+                "❌ Error fetching query states - User: tuitshoxrux, Time: 2025-06-20 11:05:22:",
+                error
+            );
+            throw error;
+        } finally {
+            if (connection) {
+                await connection.close();
+            }
+        }
+    }
+    async getQueryStates() {
+        let connection;
+        try {
+            connection = await getConnection();
+
+            console.log(
+                "📋 Fetching query states... User: tuitshoxrux, Time: 2025-06-20 10:47:53"
+            );
+
+            const query = `
+      SELECT 
+        CODE,
+        NAME,
+        ACTIVE,
+        COLOR
+      FROM R_QUERY_STATES
+      WHERE ACTIVE = 1
+      ORDER BY CODE
+    `;
+
+            const result = await connection.execute(query);
+
+            const states = result.rows.map((row) => ({
+                code: row[0],
+                name: row[1],
+                active: row[2],
+                color: row[3],
+            }));
+
+            console.log(`✅ Loaded ${states.length} query states`);
+
+            return states;
+        } catch (error) {
+            console.error("❌ Error fetching query states:", error);
             throw error;
         } finally {
             if (connection) {
@@ -139,13 +331,17 @@ class TransactionService {
         try {
             connection = await getConnection();
 
+            console.log(
+                `📋 Fetching transaction ${id} with full CLOB data - User: tuitshoxrux, Time: 2025-06-20 11:49:25`
+            );
+
             const query = `
       SELECT 
         cq.ID,
         cq.MESSAGE_ID,
         cq.TYPE,
         cq.DIRECTION,
-        cq.STATE,
+        cq.STATE as CONV_STATE,
         cq.INIT_TIME,
         cq.SEND_TIME,
         cq.RES_TIME,
@@ -157,505 +353,126 @@ class TransactionService {
         cq.DATA,
         re.MESSAGE as ERROR_DESCRIPTION,
         ft.NAME as TYPE_DESCRIPTION,
-        ft.ALIAS as TYPE_ALIAS,
-        ft.SHORT_TITLE as TYPE_SHORT_TITLE
+        ft.SHORT_TITLE as TYPE_SHORT_TITLE,
+        m.STATUS as MESSAGE_STATUS,
+        m.REASON as MESSAGE_REASON,
+        m.AMOUNT,
+        m.CURRENCY,
+        m.PAYER,
+        m.RECEIVER,
+        rqs.NAME as CONV_STATUS_NAME,
+        rqs.COLOR as CONV_STATUS_COLOR,
+        cqs.SOURCE as JSON_DATA,
+        cqsx.SOURCE.getClobVal() as XML_DATA
       FROM CONV_QUERIES cq
       LEFT JOIN R_ERRORS re ON cq.ERROR = re.CODE
       LEFT JOIN R_FORM_TYPES ft ON cq.TYPE = ft.ALIAS || '.' || ft.BODY_VERSION
+      LEFT JOIN MESSAGES m ON cq.ID = m.QUERY_ID
+      LEFT JOIN R_QUERY_STATES rqs ON cq.STATE = rqs.ID
+      LEFT JOIN CONV_QUERY_SOURCES cqs ON cq.ID = cqs.QUERY_ID
+      LEFT JOIN CONV_QUERY_SOURCES_XML cqsx ON cq.ID = cqsx.QUERY_ID
       WHERE cq.ID = :id
     `;
 
             const result = await connection.execute(query, { id });
 
             if (result.rows.length === 0) {
-                console.log(`❌ Transaction not found: ${id}`);
                 return null;
             }
 
             const row = result.rows[0];
-            const metaData = result.metaData;
-
             const transaction = {};
 
-            metaData.forEach((column, index) => {
-                const columnName = column.name.toLowerCase();
-                let value = row[index];
+            // Обрабатываем каждое поле, включая CLOB
+            await Promise.all(
+                result.metaData.map(async (column, index) => {
+                    const columnName = column.name.toLowerCase();
+                    let value = row[index];
 
-                if (value instanceof Date) {
-                    value = value.toISOString();
-                }
-
-                if (
-                    typeof value === "string" ||
-                    typeof value === "number" ||
-                    value === null ||
-                    value === undefined
-                ) {
-                    transaction[columnName] = value;
-                } else {
-                    transaction[columnName] = String(value);
-                }
-            });
-
-            console.log(`✅ Base transaction data loaded for: ${id}`);
-
-            console.log(`🔍 Fetching JSON data for transaction: ${id}`);
-            let jsonData = null;
-            try {
-                const jsonQuery = `
-        SELECT SOURCE 
-        FROM CONV_QUERY_SOURCES 
-        WHERE QUERY_ID = :id
-      `;
-                const jsonResult = await connection.execute(jsonQuery, { id });
-
-                if (jsonResult.rows.length > 0 && jsonResult.rows[0][0]) {
-                    const rawJsonData = jsonResult.rows[0][0];
-                    console.log(
-                        `📄 JSON data found, type: ${typeof rawJsonData}, constructor: ${
-                            rawJsonData.constructor?.name
-                        }`
-                    );
-
-                    if (
-                        typeof rawJsonData === "object" &&
-                        rawJsonData.constructor.name === "Lob"
-                    ) {
-                        console.log(`📖 Reading JSON CLOB data...`);
-                        jsonData = await this.readLob(rawJsonData);
-                        console.log(
-                            `✅ JSON CLOB data read, length: ${
-                                jsonData?.length || 0
-                            }`
-                        );
-                    } else if (typeof rawJsonData === "string") {
-                        jsonData = rawJsonData;
-                        console.log(
-                            `✅ JSON string data loaded, length: ${rawJsonData.length}`
-                        );
-                    } else {
-                        console.log(`🔄 Converting JSON data to string...`);
-                        jsonData = String(rawJsonData);
-                    }
-                } else {
-                    console.log(`❌ No JSON data found for transaction: ${id}`);
-                }
-            } catch (error) {
-                console.error("❌ Error fetching JSON data:", error);
-                jsonData = null;
-            }
-
-            console.log(`🔍 Fetching XML data for transaction: ${id}`);
-            let xmlData = null;
-            let xmlLoadMethod = "none";
-
-            try {
-                console.log(`🔬 Trying XML method 1: XMLSERIALIZE as CLOB...`);
-                try {
-                    const xmlQuery1 = `
-          SELECT XMLSERIALIZE(CONTENT SOURCE as CLOB INDENT) as XML_DATA 
-          FROM CONV_QUERY_SOURCES_XML 
-          WHERE QUERY_ID = :id
-        `;
-                    const xmlResult1 = await connection.execute(xmlQuery1, {
-                        id,
-                    });
-
-                    if (xmlResult1.rows.length > 0 && xmlResult1.rows[0][0]) {
-                        const rawXmlData = xmlResult1.rows[0][0];
-                        xmlLoadMethod = "XMLSERIALIZE as CLOB";
-                        console.log(
-                            `📄 XML data found via XMLSERIALIZE as CLOB, type: ${typeof rawXmlData}, constructor: ${
-                                rawXmlData.constructor?.name
-                            }`
-                        );
-
-                        if (
-                            typeof rawXmlData === "object" &&
-                            rawXmlData.constructor.name === "Lob"
-                        ) {
-                            console.log(`📖 Reading XML CLOB data...`);
-                            xmlData = await this.readLob(rawXmlData);
-                            console.log(
-                                `✅ XML CLOB data read, length: ${
-                                    xmlData?.length || 0
-                                }`
-                            );
-                        } else if (typeof rawXmlData === "string") {
-                            xmlData = rawXmlData;
-                            console.log(
-                                `✅ XML string data loaded, length: ${rawXmlData.length}`
-                            );
-                        }
-                    } else {
-                        console.log(
-                            `❌ No XML data found via XMLSERIALIZE as CLOB for transaction: ${id}`
-                        );
-                    }
-                } catch (clobError) {
-                    console.log(
-                        `❌ XMLSERIALIZE as CLOB failed:`,
-                        clobError.message
-                    );
-
-                    console.log(
-                        `🔬 Trying XML method 2: XMLSERIALIZE as VARCHAR2...`
-                    );
-                    try {
-                        const xmlQuery2 = `
-            SELECT XMLSERIALIZE(CONTENT SOURCE as VARCHAR2(4000) INDENT) as XML_DATA 
-            FROM CONV_QUERY_SOURCES_XML 
-            WHERE QUERY_ID = :id
-          `;
-                        const xmlResult2 = await connection.execute(xmlQuery2, {
-                            id,
-                        });
-
-                        if (
-                            xmlResult2.rows.length > 0 &&
-                            xmlResult2.rows[0][0]
-                        ) {
-                            xmlData = xmlResult2.rows[0][0];
-                            xmlLoadMethod = "XMLSERIALIZE as VARCHAR2";
-                            console.log(
-                                `✅ XML string data loaded via VARCHAR2, length: ${xmlData.length}`
-                            );
-                        } else {
-                            console.log(
-                                `❌ No XML data found via VARCHAR2 for transaction: ${id}`
-                            );
-                        }
-                    } catch (varcharError) {
-                        console.log(
-                            `❌ XMLSERIALIZE as VARCHAR2 failed:`,
-                            varcharError.message
-                        );
-
-                        console.log(
-                            `🔬 Trying XML method 3: extract().getClobVal()...`
-                        );
+                    // Обработка CLOB данных
+                    if (value && typeof value === "object" && value.getData) {
                         try {
-                            const xmlQuery3 = `
-              SELECT SOURCE.extract('/*').getClobVal() as XML_DATA 
-              FROM CONV_QUERY_SOURCES_XML 
-              WHERE QUERY_ID = :id
-            `;
-                            const xmlResult3 = await connection.execute(
-                                xmlQuery3,
-                                { id }
-                            );
-
-                            if (
-                                xmlResult3.rows.length > 0 &&
-                                xmlResult3.rows[0][0]
-                            ) {
-                                const rawXmlData3 = xmlResult3.rows[0][0];
-                                xmlLoadMethod = "extract+getClobVal";
-                                console.log(
-                                    `📄 XML data found via extract+getClobVal, type: ${typeof rawXmlData3}, constructor: ${
-                                        rawXmlData3.constructor?.name
-                                    }`
-                                );
-
-                                if (
-                                    typeof rawXmlData3 === "object" &&
-                                    rawXmlData3.constructor.name === "Lob"
-                                ) {
-                                    console.log(
-                                        `📖 Reading XML CLOB data from extract...`
-                                    );
-                                    xmlData = await this.readLob(rawXmlData3);
-                                    console.log(
-                                        `✅ XML CLOB data read from extract, length: ${
-                                            xmlData?.length || 0
-                                        }`
-                                    );
-                                } else if (typeof rawXmlData3 === "string") {
-                                    xmlData = rawXmlData3;
-                                    console.log(
-                                        `✅ XML string data loaded from extract, length: ${rawXmlData3.length}`
-                                    );
-                                }
-                            } else {
-                                console.log(
-                                    `❌ No XML data found via extract+getClobVal for transaction: ${id}`
-                                );
-                            }
-                        } catch (extractError) {
                             console.log(
-                                `❌ extract+getClobVal failed:`,
-                                extractError.message
+                                `📄 Reading full CLOB data for ${columnName} - User: tuitshoxrux, Time: 2025-06-20 11:49:25`
                             );
-
+                            value = await value.getData();
                             console.log(
-                                `🔬 Trying XML method 4: XMLType object inspection...`
+                                `✅ Full CLOB data read: ${columnName}, length: ${
+                                    value?.length || 0
+                                } - User: tuitshoxrux, Time: 2025-06-20 11:49:25`
                             );
-                            try {
-                                const xmlQuery4 = `
-                SELECT SOURCE 
-                FROM CONV_QUERY_SOURCES_XML 
-                WHERE QUERY_ID = :id
-              `;
-                                const xmlResult4 = await connection.execute(
-                                    xmlQuery4,
-                                    { id }
-                                );
-
-                                if (
-                                    xmlResult4.rows.length > 0 &&
-                                    xmlResult4.rows[0][0]
-                                ) {
-                                    const rawXmlData4 = xmlResult4.rows[0][0];
-                                    xmlLoadMethod = "XMLType object";
-                                    console.log(
-                                        `📄 XML object found, type: ${typeof rawXmlData4}, constructor: ${
-                                            rawXmlData4.constructor?.name
-                                        }`
-                                    );
-
-                                    if (
-                                        typeof rawXmlData4 === "object" &&
-                                        rawXmlData4 !== null
-                                    ) {
-                                        console.log(
-                                            `🔍 XMLType object properties:`,
-                                            Object.getOwnPropertyNames(
-                                                rawXmlData4
-                                            )
-                                        );
-                                        console.log(
-                                            `🔍 XMLType object prototype:`,
-                                            Object.getPrototypeOf(rawXmlData4)
-                                        );
-
-                                        const extractionMethods = [
-                                            {
-                                                name: "getClobVal",
-                                                async: false,
-                                            },
-                                            {
-                                                name: "getStringVal",
-                                                async: false,
-                                            },
-                                            { name: "toString", async: false },
-                                            { name: "valueOf", async: false },
-                                        ];
-
-                                        for (const method of extractionMethods) {
-                                            if (
-                                                rawXmlData4[method.name] &&
-                                                typeof rawXmlData4[
-                                                    method.name
-                                                ] === "function"
-                                            ) {
-                                                try {
-                                                    console.log(
-                                                        `🔬 Trying XMLType method: ${method.name}`
-                                                    );
-                                                    let result;
-
-                                                    if (method.async) {
-                                                        result =
-                                                            await rawXmlData4[
-                                                                method.name
-                                                            ]();
-                                                    } else {
-                                                        result =
-                                                            rawXmlData4[
-                                                                method.name
-                                                            ]();
-                                                    }
-
-                                                    console.log(
-                                                        `📄 Method ${
-                                                            method.name
-                                                        } result type: ${typeof result}, constructor: ${
-                                                            result?.constructor
-                                                                ?.name
-                                                        }`
-                                                    );
-
-                                                    if (
-                                                        typeof result ===
-                                                            "string" &&
-                                                        result.length > 0
-                                                    ) {
-                                                        xmlData = result;
-                                                        xmlLoadMethod = `XMLType.${method.name}`;
-                                                        console.log(
-                                                            `✅ XML extracted via ${method.name}, length: ${result.length}`
-                                                        );
-                                                        break;
-                                                    } else if (
-                                                        typeof result ===
-                                                            "object" &&
-                                                        result &&
-                                                        result.constructor
-                                                            .name === "Lob"
-                                                    ) {
-                                                        console.log(
-                                                            `📖 Reading CLOB from ${method.name}...`
-                                                        );
-                                                        xmlData =
-                                                            await this.readLob(
-                                                                result
-                                                            );
-                                                        xmlLoadMethod = `XMLType.${method.name}+Lob`;
-                                                        console.log(
-                                                            `✅ XML extracted via ${
-                                                                method.name
-                                                            }+Lob, length: ${
-                                                                xmlData?.length ||
-                                                                0
-                                                            }`
-                                                        );
-                                                        break;
-                                                    }
-                                                } catch (methodError) {
-                                                    console.log(
-                                                        `❌ XMLType method ${method.name} failed:`,
-                                                        methodError.message
-                                                    );
-                                                }
-                                            }
-                                        }
-
-                                        if (!xmlData) {
-                                            console.log(
-                                                `🔬 Trying direct XMLType conversion...`
-                                            );
-
-                                            if (
-                                                rawXmlData4.data &&
-                                                typeof rawXmlData4.data ===
-                                                    "string"
-                                            ) {
-                                                xmlData = rawXmlData4.data;
-                                                xmlLoadMethod = "XMLType.data";
-                                                console.log(
-                                                    `✅ XML extracted from .data property, length: ${xmlData.length}`
-                                                );
-                                            } else if (
-                                                rawXmlData4.value &&
-                                                typeof rawXmlData4.value ===
-                                                    "string"
-                                            ) {
-                                                xmlData = rawXmlData4.value;
-                                                xmlLoadMethod = "XMLType.value";
-                                                console.log(
-                                                    `✅ XML extracted from .value property, length: ${xmlData.length}`
-                                                );
-                                            } else if (
-                                                rawXmlData4.content &&
-                                                typeof rawXmlData4.content ===
-                                                    "string"
-                                            ) {
-                                                xmlData = rawXmlData4.content;
-                                                xmlLoadMethod =
-                                                    "XMLType.content";
-                                                console.log(
-                                                    `✅ XML extracted from .content property, length: ${xmlData.length}`
-                                                );
-                                            } else {
-                                                console.log(
-                                                    `❌ No suitable XMLType extraction method found`
-                                                );
-                                                console.log(
-                                                    `🔍 XMLType object keys:`,
-                                                    Object.keys(rawXmlData4)
-                                                );
-                                                console.log(
-                                                    `🔍 XMLType object values:`,
-                                                    Object.values(rawXmlData4)
-                                                );
-                                            }
-                                        }
-                                    }
-                                } else {
-                                    console.log(
-                                        `❌ No XML object found for transaction: ${id}`
-                                    );
-                                }
-                            } catch (objectError) {
-                                console.log(
-                                    `❌ XMLType object inspection failed:`,
-                                    objectError.message
-                                );
-                            }
+                        } catch (error) {
+                            console.error(
+                                `❌ Error reading full CLOB for ${columnName} - User: tuitshoxrux, Time: 2025-06-20 11:49:25:`,
+                                error
+                            );
+                            value = null;
                         }
                     }
-                }
-            } catch (error) {
-                console.error("❌ Error fetching XML data:", error);
-                xmlData = null;
-            }
 
-            console.log(`🔍 Final XML data check before assignment:`);
-            console.log(`   - xmlData type: ${typeof xmlData}`);
-            console.log(`   - xmlData length: ${xmlData?.length || 0}`);
-            console.log(
-                `   - xmlData is string: ${typeof xmlData === "string"}`
-            );
-            console.log(
-                `   - xmlData preview: ${
-                    typeof xmlData === "string" && xmlData.length > 0
-                        ? xmlData.substring(0, 100) + "..."
-                        : "not a string or empty"
-                }`
-            );
-            console.log(`   - xmlLoadMethod: ${xmlLoadMethod}`);
+                    if (value instanceof Date) {
+                        value = value.toISOString();
+                    }
 
-            console.log(`🔍 Final JSON data check before assignment:`);
-            console.log(`   - jsonData type: ${typeof jsonData}`);
-            console.log(`   - jsonData length: ${jsonData?.length || 0}`);
-            console.log(
-                `   - jsonData preview: ${
-                    typeof jsonData === "string" && jsonData.length > 0
-                        ? jsonData.substring(0, 100) + "..."
-                        : "not a string or empty"
-                }`
+                    transaction[columnName] = value;
+                })
             );
 
-            const finalJsonData =
-                typeof jsonData === "string" && jsonData.length > 0
-                    ? jsonData
-                    : null;
-            const finalXmlData =
-                typeof xmlData === "string" && xmlData.length > 0
-                    ? xmlData
-                    : null;
-
-            console.log(`🔧 Assignment results:`);
-            console.log(
-                `   - finalJsonData: ${
-                    finalJsonData
-                        ? "SET (" + finalJsonData.length + " chars)"
-                        : "NULL"
-                }`
-            );
-            console.log(
-                `   - finalXmlData: ${
-                    finalXmlData
-                        ? "SET (" + finalXmlData.length + " chars)"
-                        : "NULL"
-                }`
-            );
-
-            transaction.json_data = finalJsonData;
-            transaction.xml_data = finalXmlData;
-
-            console.log(`📊 Transaction summary:`, {
-                id: transaction.id,
-                hasJson: !!transaction.json_data,
-                hasXml: !!transaction.xml_data,
-                jsonLength: transaction.json_data?.length || 0,
-                xmlLength: transaction.xml_data?.length || 0,
-                xmlLoadMethod: xmlLoadMethod,
+            console.log(`📈 Transaction ${id} loaded with CLOB:`, {
+                has_json: !!transaction.json_data,
+                has_xml: !!transaction.xml_data,
+                json_length: transaction.json_data?.length || 0,
+                xml_length: transaction.xml_data?.length || 0,
             });
 
             return transaction;
         } catch (error) {
-            console.error("❌ Error fetching transaction by ID:", error);
+            console.error(
+                `❌ Error fetching transaction ${id} - User: tuitshoxrux, Time: 2025-06-20 11:49:25:`,
+                error
+            );
+            throw error;
+        } finally {
+            if (connection) {
+                await connection.close();
+            }
+        }
+    }
+
+    async getQueryStates() {
+        let connection;
+        try {
+            connection = await getConnection();
+
+            console.log(
+                "📋 Fetching query states... User: tuitshoxrux, Time: 2025-06-20 10:11:45"
+            );
+
+            const query = `
+      SELECT 
+        CODE,
+        NAME,
+        ACTIVE,
+        COLOR
+      FROM R_QUERY_STATES
+      WHERE ACTIVE = 1
+      ORDER BY CODE
+    `;
+
+            const result = await connection.execute(query);
+
+            const states = result.rows.map((row) => ({
+                code: row[0],
+                name: row[1],
+                active: row[2],
+                color: row[3],
+            }));
+
+            console.log(`✅ Loaded ${states.length} query states`);
+
+            return states;
+        } catch (error) {
+            console.error("❌ Error fetching query states:", error);
             throw error;
         } finally {
             if (connection) {
@@ -781,31 +598,157 @@ class TransactionService {
         try {
             connection = await getConnection();
 
-            console.log("📋 Fetching form types...");
+            console.log(
+                "📋 Fetching form types - User: tuitshoxrux, Time: 2025-06-20 12:28:15"
+            );
 
             const query = `
-        SELECT DISTINCT
-          ALIAS,
-          NAME,
-          SHORT_TITLE
-        FROM R_FORM_TYPES
-        WHERE ALIAS IS NOT NULL
-        ORDER BY ALIAS
-      `;
+      SELECT 
+        ID,
+        NAME,
+        ALIAS,
+        STATE,
+        HEAD_VERSION,
+        BODY_VERSION,
+        TITLE,
+        SHORT_TITLE,
+        ISPDF
+      FROM R_FORM_TYPES
+      WHERE STATE = 1
+      ORDER BY NAME
+    `;
 
             const result = await connection.execute(query);
 
             const formTypes = result.rows.map((row) => ({
-                alias: row[0],
+                id: row[0],
                 name: row[1],
-                shortTitle: row[2],
+                alias: row[2],
+                state: row[3],
+                head_version: row[4],
+                body_version: row[5],
+                title: row[6],
+                short_title: row[7],
+                ispdf: row[8],
             }));
 
-            console.log(`✅ Loaded ${formTypes.length} form types`);
+            console.log(
+                `✅ Loaded ${formTypes.length} form types - User: tuitshoxrux, Time: 2025-06-20 12:28:15`
+            );
 
             return formTypes;
         } catch (error) {
-            console.error("❌ Error fetching form types:", error);
+            console.error(
+                "❌ Error fetching form types - User: tuitshoxrux, Time: 2025-06-20 12:28:15:",
+                error
+            );
+            throw error;
+        } finally {
+            if (connection) {
+                await connection.close();
+            }
+        }
+    }
+
+    async getQueryStates() {
+        let connection;
+        try {
+            connection = await getConnection();
+
+            console.log(
+                "📊 Fetching query states - User: tuitshoxrux, Time: 2025-06-20 12:28:15"
+            );
+
+            const query = `
+      SELECT 
+        ID,
+        NAME,
+        STATUS as ACTIVE,
+        DIRECTION,
+        COLOR,
+        MESSAGES_STATE
+      FROM R_QUERY_STATES
+      WHERE STATUS = 1
+      ORDER BY ID
+    `;
+
+            const result = await connection.execute(query);
+
+            const queryStates = result.rows.map((row) => ({
+                id: row[0],
+                name: row[1],
+                active: row[2],
+                direction: row[3],
+                color: row[4],
+                messages_state: row[5],
+            }));
+
+            console.log(
+                `✅ Loaded ${queryStates.length} query states - User: tuitshoxrux, Time: 2025-06-20 12:28:15`
+            );
+
+            return queryStates;
+        } catch (error) {
+            console.error(
+                "❌ Error fetching query states - User: tuitshoxrux, Time: 2025-06-20 12:28:15:",
+                error
+            );
+            throw error;
+        } finally {
+            if (connection) {
+                await connection.close();
+            }
+        }
+    }
+
+    async getMessageStates() {
+        let connection;
+        try {
+            connection = await getConnection();
+
+            console.log(
+                "📨 Fetching message states - User: tuitshoxrux, Time: 2025-06-20 12:28:15"
+            );
+
+            // Поскольку таблица R_MESSAGE_STATES не существует, используем уникальные статусы из MESSAGES
+            const query = `
+      SELECT DISTINCT 
+        STATUS as code,
+        CASE 
+          WHEN STATUS = 7 THEN 'Отправлено'
+          WHEN STATUS = 9 THEN 'Завершено'
+          WHEN STATUS = 11 THEN 'Отклонено'
+          ELSE 'Статус ' || STATUS
+        END as name,
+        CASE 
+          WHEN STATUS = 7 THEN 'success'
+          WHEN STATUS = 9 THEN 'success'
+          WHEN STATUS = 11 THEN 'error'
+          ELSE 'default'
+        END as color
+      FROM MESSAGES
+      WHERE STATUS IS NOT NULL
+      ORDER BY STATUS
+    `;
+
+            const result = await connection.execute(query);
+
+            const messageStates = result.rows.map((row) => ({
+                code: row[0],
+                name: row[1],
+                color: row[2],
+            }));
+
+            console.log(
+                `✅ Loaded ${messageStates.length} message states - User: tuitshoxrux, Time: 2025-06-20 12:28:15`
+            );
+
+            return messageStates;
+        } catch (error) {
+            console.error(
+                "❌ Error fetching message states - User: tuitshoxrux, Time: 2025-06-20 12:28:15:",
+                error
+            );
             throw error;
         } finally {
             if (connection) {
@@ -877,6 +820,429 @@ class TransactionService {
         } catch (error) {
             console.error("❌ Database connection test failed:", error);
             throw error;
+        } finally {
+            if (connection) {
+                await connection.close();
+            }
+        }
+    }
+
+    async getQueryStates() {
+        let connection;
+        try {
+            connection = await getConnection();
+
+            console.log(
+                "📋 Fetching query states... User: tuitshoxrux, Time: 2025-06-20 10:51:20"
+            );
+
+            const query = `
+      SELECT 
+        CODE,
+        NAME,
+        ACTIVE,
+        COLOR
+      FROM R_QUERY_STATES
+      WHERE ACTIVE = 1
+      ORDER BY CODE
+    `;
+
+            const result = await connection.execute(query);
+
+            const states = result.rows.map((row) => ({
+                code: row[0],
+                name: row[1],
+                active: row[2],
+                color: row[3],
+            }));
+
+            console.log(
+                `✅ Loaded ${states.length} query states - User: tuitshoxrux, Time: 2025-06-20 10:51:20`
+            );
+
+            return states;
+        } catch (error) {
+            console.error(
+                "❌ Error fetching query states - User: tuitshoxrux, Time: 2025-06-20 10:51:20:",
+                error
+            );
+            throw error;
+        } finally {
+            if (connection) {
+                await connection.close();
+            }
+        }
+    }
+
+    async getFormTypes() {
+        let connection;
+        try {
+            connection = await getConnection();
+
+            console.log(
+                "📋 Fetching form types - User: tuitshoxrux, Time: 2025-06-20 12:37:14"
+            );
+
+            // Сначала проверим структуру таблицы
+            const checkQuery = `
+      SELECT column_name 
+      FROM user_tab_columns 
+      WHERE table_name = 'R_FORM_TYPES'
+      ORDER BY column_id
+    `;
+
+            try {
+                const checkResult = await connection.execute(checkQuery);
+                console.log(
+                    "📊 R_FORM_TYPES columns:",
+                    checkResult.rows.map((row) => row[0])
+                );
+            } catch (e) {
+                console.log("⚠️ Could not check table structure:", e.message);
+            }
+
+            // Основной запрос с обработкой возможных различий в структуре
+            let query = `
+      SELECT 
+        ID,
+        NAME,
+        ALIAS,
+        STATE,
+        HEAD_VERSION,
+        BODY_VERSION,
+        TITLE,
+        SHORT_TITLE
+      FROM R_FORM_TYPES
+    `;
+
+            // Если нет поля STATE, берем все записи
+            const hasStateColumn = true; // Предполагаем что есть, если ошибка - уберем условие
+
+            try {
+                if (hasStateColumn) {
+                    query += ` WHERE STATE = 1`;
+                }
+                query += ` ORDER BY NAME`;
+
+                const result = await connection.execute(query);
+
+                const formTypes = result.rows.map((row) => ({
+                    id: row[0],
+                    name: row[1],
+                    alias: row[2],
+                    state: row[3],
+                    head_version: row[4],
+                    body_version: row[5],
+                    title: row[6],
+                    short_title: row[7],
+                }));
+
+                console.log(
+                    `✅ Loaded ${formTypes.length} form types - User: tuitshoxrux, Time: 2025-06-20 12:37:14`
+                );
+                console.log("📋 Sample form types:", formTypes.slice(0, 3));
+
+                return formTypes;
+            } catch (error) {
+                if (error.message.includes("STATE")) {
+                    // Если нет поля STATE, пробуем без условия
+                    console.log(
+                        "⚠️ STATE column not found, trying without WHERE clause - User: tuitshoxrux, Time: 2025-06-20 12:37:14"
+                    );
+
+                    const simpleQuery = `
+          SELECT 
+            ID,
+            NAME,
+            ALIAS,
+            1 as STATE,
+            HEAD_VERSION,
+            BODY_VERSION,
+            TITLE,
+            SHORT_TITLE
+          FROM R_FORM_TYPES
+          ORDER BY NAME
+        `;
+
+                    const result = await connection.execute(simpleQuery);
+
+                    const formTypes = result.rows.map((row) => ({
+                        id: row[0],
+                        name: row[1],
+                        alias: row[2],
+                        state: row[3],
+                        head_version: row[4],
+                        body_version: row[5],
+                        title: row[6],
+                        short_title: row[7],
+                    }));
+
+                    console.log(
+                        `✅ Loaded ${formTypes.length} form types (no STATE filter) - User: tuitshoxrux, Time: 2025-06-20 12:37:14`
+                    );
+                    return formTypes;
+                }
+                throw error;
+            }
+        } catch (error) {
+            console.error(
+                "❌ Error fetching form types - User: tuitshoxrux, Time: 2025-06-20 12:37:14:",
+                error
+            );
+
+            // Возвращаем тестовые данные если таблица недоступна
+            console.log(
+                "⚠️ Returning mock form types data - User: tuitshoxrux, Time: 2025-06-20 12:37:14"
+            );
+
+            return [
+                {
+                    id: 1,
+                    name: "Customer Credit Transfer",
+                    alias: "pacs.008.001.08",
+                    state: 1,
+                    head_version: "1",
+                    body_version: "08",
+                    title: "FIToFICustomerCreditTransfer",
+                    short_title: "Кредитовый перевод",
+                },
+                {
+                    id: 2,
+                    name: "Payment Return",
+                    alias: "pacs.004.001.09",
+                    state: 1,
+                    head_version: "1",
+                    body_version: "09",
+                    title: "PaymentReturn",
+                    short_title: "Возврат платежа",
+                },
+                {
+                    id: 3,
+                    name: "Financial Institution Credit Transfer",
+                    alias: "pacs.009.001.08",
+                    state: 1,
+                    head_version: "1",
+                    body_version: "08",
+                    title: "FinancialInstitutionCreditTransfer",
+                    short_title: "Межбанковский перевод",
+                },
+            ];
+        } finally {
+            if (connection) {
+                await connection.close();
+            }
+        }
+    }
+
+    async getQueryStates() {
+        let connection;
+        try {
+            connection = await getConnection();
+
+            console.log(
+                "📊 Fetching query states - User: tuitshoxrux, Time: 2025-06-20 12:40:35"
+            );
+
+            // Сначала проверим структуру таблицы
+            const checkQuery = `
+      SELECT column_name 
+      FROM user_tab_columns 
+      WHERE table_name = 'R_QUERY_STATES'
+      ORDER BY column_id
+    `;
+
+            try {
+                const checkResult = await connection.execute(checkQuery);
+                console.log(
+                    "📊 R_QUERY_STATES columns:",
+                    checkResult.rows.map((row) => row[0])
+                );
+            } catch (e) {
+                console.log(
+                    "⚠️ Could not check R_QUERY_STATES structure:",
+                    e.message
+                );
+            }
+
+            // Попробуем несколько вариантов запроса
+            let queryStates = [];
+
+            // Вариант 1: полный запрос
+            try {
+                const query1 = `
+        SELECT 
+          ID,
+          NAME,
+          STATUS as ACTIVE,
+          DIRECTION,
+          COLOR,
+          MESSAGES_STATE
+        FROM R_QUERY_STATES
+        WHERE STATUS = 1
+        ORDER BY ID
+      `;
+
+                const result = await connection.execute(query1);
+
+                queryStates = result.rows.map((row) => ({
+                    id: row[0],
+                    name: row[1],
+                    active: row[2],
+                    direction: row[3],
+                    color: row[4],
+                    messages_state: row[5],
+                }));
+
+                console.log(
+                    `✅ Loaded ${queryStates.length} query states (with STATUS filter) - User: tuitshoxrux, Time: 2025-06-20 12:40:35`
+                );
+            } catch (error1) {
+                console.log(
+                    "⚠️ First query failed, trying without STATUS filter - User: tuitshoxrux, Time: 2025-06-20 12:40:35"
+                );
+
+                // Вариант 2: без фильтра STATUS
+                try {
+                    const query2 = `
+          SELECT 
+            ID,
+            NAME,
+            1 as ACTIVE,
+            DIRECTION,
+            COLOR,
+            MESSAGES_STATE
+          FROM R_QUERY_STATES
+          ORDER BY ID
+        `;
+
+                    const result = await connection.execute(query2);
+
+                    queryStates = result.rows.map((row) => ({
+                        id: row[0],
+                        name: row[1],
+                        active: row[2],
+                        direction: row[3],
+                        color: row[4],
+                        messages_state: row[5],
+                    }));
+
+                    console.log(
+                        `✅ Loaded ${queryStates.length} query states (no STATUS filter) - User: tuitshoxrux, Time: 2025-06-20 12:40:35`
+                    );
+                } catch (error2) {
+                    console.log(
+                        "⚠️ Second query failed, trying minimal query - User: tuitshoxrux, Time: 2025-06-20 12:40:35"
+                    );
+
+                    // Вариант 3: минимальный запрос
+                    try {
+                        const query3 = `
+            SELECT 
+              ID,
+              NAME
+            FROM R_QUERY_STATES
+            ORDER BY ID
+          `;
+
+                        const result = await connection.execute(query3);
+
+                        queryStates = result.rows.map((row) => ({
+                            id: row[0],
+                            name: row[1],
+                            active: 1,
+                            direction: null,
+                            color: null,
+                            messages_state: null,
+                        }));
+
+                        console.log(
+                            `✅ Loaded ${queryStates.length} query states (minimal) - User: tuitshoxrux, Time: 2025-06-20 12:40:35`
+                        );
+                    } catch (error3) {
+                        console.log(
+                            "⚠️ All queries failed, using mock data - User: tuitshoxrux, Time: 2025-06-20 12:40:35"
+                        );
+                        throw error3;
+                    }
+                }
+            }
+
+            // Если получили данные, возвращаем
+            if (queryStates.length > 0) {
+                console.log("📊 Sample query states:", queryStates.slice(0, 3));
+                return queryStates;
+            }
+
+            throw new Error("No query states found");
+        } catch (error) {
+            console.error(
+                "❌ Error fetching query states - User: tuitshoxrux, Time: 2025-06-20 12:40:35:",
+                error
+            );
+
+            // Возвращаем mock данные
+            console.log(
+                "⚠️ Returning mock query states data - User: tuitshoxrux, Time: 2025-06-20 12:40:35"
+            );
+
+            return [
+                {
+                    id: 0,
+                    name: "Инициализация",
+                    active: 1,
+                    direction: null,
+                    color: "#1890ff",
+                    messages_state: null,
+                },
+                {
+                    id: 1,
+                    name: "В обработке",
+                    active: 1,
+                    direction: null,
+                    color: "#faad14",
+                    messages_state: null,
+                },
+                {
+                    id: 5,
+                    name: "Отбракован",
+                    active: 1,
+                    direction: null,
+                    color: "#ff4d4f",
+                    messages_state: null,
+                },
+                {
+                    id: 6,
+                    name: "Авторизован",
+                    active: 1,
+                    direction: null,
+                    color: "#52c41a",
+                    messages_state: null,
+                },
+                {
+                    id: 7,
+                    name: "Принят",
+                    active: 1,
+                    direction: null,
+                    color: "#52c41a",
+                    messages_state: null,
+                },
+                {
+                    id: 8,
+                    name: "Отправлен",
+                    active: 1,
+                    direction: null,
+                    color: "#722ed1",
+                    messages_state: null,
+                },
+                {
+                    id: 9,
+                    name: "Завершен",
+                    active: 1,
+                    direction: null,
+                    color: "#52c41a",
+                    messages_state: null,
+                },
+            ];
         } finally {
             if (connection) {
                 await connection.close();

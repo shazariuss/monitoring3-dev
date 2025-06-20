@@ -2,14 +2,12 @@ import React, { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { Layout, message } from "antd";
 import Header from "../../widgets/Header/Header";
-import StatsCards from "../../widgets/StatsCards/StatsCards";
-import QuickFilters from "../../widgets/QuickFilters/QuickFilters";
+// import StatsCards from "../../widgets/StatsCards/StatsCards";
+// import QuickFilters from "../../widgets/QuickFilters/QuickFilters";
 import Filters from "../../widgets/Filters/Filters";
 import TransactionTable from "../../widgets/TransactionTable/TransactionTable";
-import {
-    fetchStats,
-    fetchTransactions,
-} from "../../features/transactions/transactionSlice";
+import { fetchTransactions } from "../../features/transactions/transactionSlice";
+import { fetchStats } from "../../features/stats/statsSlice";
 import {
     fetchErrors,
     fetchFormTypes,

@@ -23,6 +23,8 @@ import {
     CheckCircleOutlined,
     ExclamationCircleOutlined,
     ReloadOutlined,
+    SendOutlined,
+    DownloadOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import StatusBadge from "../../../shared/components/StatusBadge/StatusBadge";
@@ -100,9 +102,6 @@ function TransactionDetail({ transaction, loading }) {
                             {formatDateTime(transaction.init_time)}
                         </Text>
                         <br />
-                        {/* <Text type="secondary" style={{ fontSize: '11px' }}>
-              User: User
-            </Text> */}
                     </div>
                 ),
             });
@@ -111,7 +110,7 @@ function TransactionDetail({ transaction, loading }) {
         if (transaction.send_time) {
             timeline.push({
                 color: transaction.error ? "red" : "green",
-                dot: <ClockCircleOutlined />,
+                dot: <SendOutlined />,
                 children: (
                     <div>
                         <Text strong>Транзакция отправлена</Text>
@@ -119,14 +118,16 @@ function TransactionDetail({ transaction, loading }) {
                         <Text type="secondary">
                             {formatDateTime(transaction.send_time)}
                         </Text>
-                        {transaction.error && (
+                        {transaction.error && transaction.error !== 0 && (
                             <>
                                 <br />
                                 <Text
                                     type="danger"
                                     style={{ fontSize: "11px" }}
                                 >
-                                    Ошибка: {transaction.error_message}
+                                    Ошибка:{" "}
+                                    {transaction.error_description ||
+                                        transaction.error_message}
                                 </Text>
                             </>
                         )}
@@ -153,6 +154,32 @@ function TransactionDetail({ transaction, loading }) {
 
         return timeline;
     };
+
+    // Функция получения статуса для StatusBadge
+    const getStatusForBadge = () => {
+        return {
+            state: transaction.conv_state || transaction.state,
+            error: transaction.error,
+            error_message:
+                transaction.error_message || transaction.error_description,
+        };
+    };
+
+    // Функция форматирования суммы
+    const formatAmount = (amount, currency) => {
+        if (!amount) return "Н/Д";
+
+        const formattedAmount = new Intl.NumberFormat("ru-RU", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        }).format(amount);
+
+        return currency ? `${formattedAmount} ${currency}` : formattedAmount;
+    };
+
+    // Проверка наличия данных
+    const hasJsonData = transaction.data || transaction.json_data;
+    const hasXmlData = transaction.xml_data;
 
     return (
         <div className={styles.transactionDetail}>
@@ -198,9 +225,13 @@ function TransactionDetail({ transaction, loading }) {
                                     <div className={styles.statusCardContent}>
                                         <Text type="secondary">Статус</Text>
                                         <StatusBadge
-                                            state={transaction.state}
+                                            state={
+                                                transaction.conv_state ||
+                                                transaction.state
+                                            }
                                             error={transaction.error}
                                             errorMessage={
+                                                transaction.error_description ||
                                                 transaction.error_message
                                             }
                                             size="large"
@@ -241,6 +272,65 @@ function TransactionDetail({ transaction, loading }) {
                             </Col>
                         </Row>
 
+                        {/* Payment Information */}
+                        {(transaction.payer ||
+                            transaction.receiver ||
+                            transaction.amount) && (
+                            <Row gutter={16} style={{ marginBottom: 24 }}>
+                                <Col span={24}>
+                                    <Card
+                                        title="Информация о платеже"
+                                        size="small"
+                                    >
+                                        <Row gutter={16}>
+                                            {transaction.payer && (
+                                                <Col xs={24} sm={8}>
+                                                    <Statistic
+                                                        title="Плательщик"
+                                                        value={
+                                                            transaction.payer
+                                                        }
+                                                        valueStyle={{
+                                                            fontSize: "14px",
+                                                        }}
+                                                    />
+                                                </Col>
+                                            )}
+                                            {transaction.receiver && (
+                                                <Col xs={24} sm={8}>
+                                                    <Statistic
+                                                        title="Получатель"
+                                                        value={
+                                                            transaction.receiver
+                                                        }
+                                                        valueStyle={{
+                                                            fontSize: "14px",
+                                                        }}
+                                                    />
+                                                </Col>
+                                            )}
+                                            {transaction.amount && (
+                                                <Col xs={24} sm={8}>
+                                                    <Statistic
+                                                        title="Сумма"
+                                                        value={formatAmount(
+                                                            transaction.amount,
+                                                            transaction.currency
+                                                        )}
+                                                        valueStyle={{
+                                                            fontSize: "16px",
+                                                            color: "#1890ff",
+                                                            fontWeight: "bold",
+                                                        }}
+                                                    />
+                                                </Col>
+                                            )}
+                                        </Row>
+                                    </Card>
+                                </Col>
+                            </Row>
+                        )}
+
                         {/* Data Availability */}
                         <Row gutter={16} style={{ marginBottom: 24 }}>
                             <Col xs={24} sm={12}>
@@ -257,24 +347,24 @@ function TransactionDetail({ transaction, loading }) {
                                         <Space>
                                             <Tag
                                                 color={
-                                                    transaction.json_data
+                                                    hasJsonData
                                                         ? "green"
                                                         : "red"
                                                 }
                                             >
-                                                {transaction.json_data
+                                                {hasJsonData
                                                     ? "Доступно"
                                                     : "Недоступно"}
                                             </Tag>
-                                            {transaction.json_data && (
+                                            {hasJsonData && (
                                                 <Text
                                                     type="secondary"
                                                     style={{ fontSize: "11px" }}
                                                 >
-                                                    {
-                                                        transaction.json_data
-                                                            .length
-                                                    }{" "}
+                                                    {typeof hasJsonData ===
+                                                    "string"
+                                                        ? hasJsonData.length
+                                                        : "Есть данные"}{" "}
                                                     символов
                                                 </Text>
                                             )}
@@ -296,25 +386,19 @@ function TransactionDetail({ transaction, loading }) {
                                         <Space>
                                             <Tag
                                                 color={
-                                                    transaction.xml_data
-                                                        ? "green"
-                                                        : "red"
+                                                    hasXmlData ? "green" : "red"
                                                 }
                                             >
-                                                {transaction.xml_data
+                                                {hasXmlData
                                                     ? "Доступно"
                                                     : "Недоступно"}
                                             </Tag>
-                                            {transaction.xml_data && (
+                                            {hasXmlData && (
                                                 <Text
                                                     type="secondary"
                                                     style={{ fontSize: "11px" }}
                                                 >
-                                                    {
-                                                        transaction.xml_data
-                                                            .length
-                                                    }{" "}
-                                                    символов
+                                                    {hasXmlData.length} символов
                                                 </Text>
                                             )}
                                         </Space>
@@ -358,19 +442,56 @@ function TransactionDetail({ transaction, loading }) {
                                     <TypeBadge
                                         type={transaction.type}
                                         typeDescription={
-                                            transaction.type_description
+                                            transaction.type_description ||
+                                            transaction.type_short_title
                                         }
                                     />
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Имя файла">
-                                    <Text code>
-                                        {transaction.file_name || "Н/Д"}
-                                    </Text>
+                                    <Space>
+                                        <Text code>
+                                            {transaction.file_name || "Н/Д"}
+                                        </Text>
+                                        {transaction.file_name && (
+                                            <DownloadOutlined
+                                                style={{
+                                                    color: "#1890ff",
+                                                    cursor: "pointer",
+                                                }}
+                                                onClick={() => {
+                                                    window.open(
+                                                        `/api/files/download?file=${encodeURIComponent(
+                                                            transaction.file_name
+                                                        )}&type=request`,
+                                                        "_blank"
+                                                    );
+                                                }}
+                                            />
+                                        )}
+                                    </Space>
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Файл ответа">
-                                    <Text code>
-                                        {transaction.res_file_name || "Н/Д"}
-                                    </Text>
+                                    <Space>
+                                        <Text code>
+                                            {transaction.res_file_name || "Н/Д"}
+                                        </Text>
+                                        {transaction.res_file_name && (
+                                            <DownloadOutlined
+                                                style={{
+                                                    color: "#1890ff",
+                                                    cursor: "pointer",
+                                                }}
+                                                onClick={() => {
+                                                    window.open(
+                                                        `/api/files/download?file=${encodeURIComponent(
+                                                            transaction.res_file_name
+                                                        )}&type=response`,
+                                                        "_blank"
+                                                    );
+                                                }}
+                                            />
+                                        )}
+                                    </Space>
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Время инициации">
                                     {formatDateTime(transaction.init_time)}
@@ -387,32 +508,11 @@ function TransactionDetail({ transaction, loading }) {
                             </Descriptions>
                         </Card>
 
-                        {/* <Card
-                            title="Информация о сессии"
-                            size="small"
-                            style={{ marginTop: 16 }}
-                        >
-                            <Descriptions
-                                column={{ xs: 1, sm: 2 }}
-                                size="small"
-                            >
-                                <Descriptions.Item label="Текущий пользователь">
-                                </Descriptions.Item>
-                                <Descriptions.Item label="Текущее время">
-                                    <Text>2025-06-18 04:49:00</Text>
-                                </Descriptions.Item>
-                                <Descriptions.Item label="Часовой пояс">
-                                    <Text>UTC</Text>
-                                </Descriptions.Item>
-                                <Descriptions.Item label="База данных">
-                                    <Text>Oracle 19c</Text>
-                                </Descriptions.Item>
-                            </Descriptions>
-                        </Card> */}
+                        {/* Session Information */}
                     </div>
                 </TabPane>
 
-                {/* <TabPane
+                <TabPane
                     tab={
                         <Space>
                             <HistoryOutlined />
@@ -448,14 +548,17 @@ function TransactionDetail({ transaction, loading }) {
                                         <Statistic
                                             title="Статус"
                                             value={
-                                                transaction.error
+                                                transaction.error &&
+                                                transaction.error !== 0
                                                     ? "Неудача"
                                                     : "Успех"
                                             }
                                             valueStyle={{
-                                                color: transaction.error
-                                                    ? "#ff4d4f"
-                                                    : "#52c41a",
+                                                color:
+                                                    transaction.error &&
+                                                    transaction.error !== 0
+                                                        ? "#ff4d4f"
+                                                        : "#52c41a",
                                             }}
                                         />
                                     </Col>
@@ -463,14 +566,14 @@ function TransactionDetail({ transaction, loading }) {
                             </div>
                         </Card>
                     </div>
-                </TabPane> */}
+                </TabPane>
 
                 <TabPane
                     tab={
                         <Space>
                             <FileTextOutlined />
                             <span>Данные JSON</span>
-                            {transaction.json_data && (
+                            {hasJsonData && (
                                 <Tag color="green" size="small">
                                     Доступно
                                 </Tag>
@@ -480,9 +583,13 @@ function TransactionDetail({ transaction, loading }) {
                     key="json"
                 >
                     <div className={styles.tabContent}>
-                        {transaction.json_data ? (
+                        {hasJsonData ? (
                             <CodeViewer
-                                code={transaction.json_data}
+                                code={
+                                    typeof hasJsonData === "string"
+                                        ? hasJsonData
+                                        : JSON.stringify(transaction, null, 2)
+                                }
                                 language="json"
                                 title="Исходные данные JSON"
                                 fileName={`transaction-${transaction.id}-json`}
@@ -504,7 +611,7 @@ function TransactionDetail({ transaction, loading }) {
                         <Space>
                             <CodeOutlined />
                             <span>Данные XML</span>
-                            {transaction.xml_data && (
+                            {hasXmlData && (
                                 <Tag color="green" size="small">
                                     Доступно
                                 </Tag>
@@ -514,9 +621,9 @@ function TransactionDetail({ transaction, loading }) {
                     key="xml"
                 >
                     <div className={styles.tabContent}>
-                        {transaction.xml_data ? (
+                        {hasXmlData ? (
                             <CodeViewer
-                                code={transaction.xml_data}
+                                code={hasXmlData}
                                 language="xml"
                                 title="Исходные данные XML"
                                 fileName={`transaction-${transaction.id}-xml`}

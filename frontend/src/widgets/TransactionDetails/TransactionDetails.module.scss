@@ -1,0 +1,63 @@
+.transactionDetails {
+    .tabs {
+        :global(.ant-tabs-content-holder) {
+            padding: 16px 0;
+        }
+
+        :global(.ant-tabs-tab) {
+            font-size: 14px;
+            font-weight: 500;
+        }
+    }
+
+    .tabContent {
+        padding: 8px 0;
+    }
+
+    // Стили для кода
+    :global(.token.tag) {
+        color: #ff7875;
+    }
+
+    :global(.token.attr-name) {
+        color: #ffc53d;
+    }
+
+    :global(.token.attr-value) {
+        color: #95de64;
+    }
+
+    :global(.token.punctuation) {
+        color: #d9d9d9;
+    }
+
+    :global(.token.string) {
+        color: #95de64;
+    }
+
+    :global(.token.number) {
+        color: #ffc53d;
+    }
+
+    :global(.token.boolean) {
+        color: #ff7875;
+    }
+
+    :global(.token.null) {
+        color: #ff7875;
+    }
+
+    // Адаптивность для мобильных
+    @media (max-width: 768px) {
+        :global(.ant-col) {
+            margin-bottom: 16px;
+        }
+
+        .tabs {
+            :global(.ant-tabs-tab) {
+                font-size: 12px;
+                padding: 8px 12px;
+            }
+        }
+    }
+}

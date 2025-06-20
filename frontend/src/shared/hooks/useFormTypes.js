@@ -1,21 +1,23 @@
 import { useState, useEffect } from "react";
 
-const useMessageStates = () => {
-    const [messageStates, setMessageStates] = useState([]);
+const useFormTypes = () => {
+    const [formTypes, setFormTypes] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        const fetchMessageStates = async () => {
+        const fetchFormTypes = async () => {
             setLoading(true);
             setError(null);
 
             try {
-                const response = await fetch(
-                    "/api/transactions/message-states"
-                );
+                const response = await fetch("/api/transactions/form-types");
+
+                console.log("📋 Form types response status:", response.status);
 
                 if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error("📋 Form types error response:", errorText);
                     throw new Error(
                         `HTTP ${response.status}: ${response.statusText}`
                     );
@@ -23,19 +25,19 @@ const useMessageStates = () => {
 
                 const data = await response.json();
 
-                setMessageStates(data || []);
+                setFormTypes(data || []);
             } catch (err) {
                 setError(err.message);
-                setMessageStates([]);
+                setFormTypes([]);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchMessageStates();
+        fetchFormTypes();
     }, []);
 
-    return { messageStates, loading, error };
+    return { formTypes, loading, error };
 };
 
-export default useMessageStates;
+export default useFormTypes;

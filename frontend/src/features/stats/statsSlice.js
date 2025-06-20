@@ -5,10 +5,6 @@ export const fetchStats = createAsyncThunk(
     "stats/fetchStats",
     async (_, { rejectWithValue }) => {
         try {
-            console.log(
-                "📊 Fetching statistics - User: tuitshoxrux, Time: 2025-06-19 04:19:59"
-            );
-
             const response = await fetch("/api/transactions/stats");
 
             if (!response.ok) {
@@ -19,17 +15,8 @@ export const fetchStats = createAsyncThunk(
 
             const data = await response.json();
 
-            console.log(
-                "✅ Statistics loaded - User: tuitshoxrux, Time: 2025-06-19 04:19:59:",
-                data
-            );
-
             return data;
         } catch (error) {
-            console.error(
-                "❌ Error fetching statistics - User: tuitshoxrux, Time: 2025-06-19 04:19:59:",
-                error
-            );
             return rejectWithValue(error.message);
         }
     }
@@ -75,3 +62,4 @@ const statsSlice = createSlice({
 export const { clearError } = statsSlice.actions;
 
 export default statsSlice.reducer;
+export const statsReducer = statsSlice.reducer;

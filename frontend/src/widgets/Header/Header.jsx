@@ -21,10 +21,10 @@ import {
 import dayjs from "dayjs";
 import "dayjs/locale/ru";
 import relativeTime from "dayjs/plugin/relativeTime";
-import {
-    fetchTransactions,
-    fetchStats,
-} from "../../features/transactions/transactionSlice";
+// import {
+//     fetchTransactions,
+//     fetchStats,
+// } from "../../features/transactions/transactionSlice";
 import {
     setLastUpdate,
     toggleAutoRefresh,

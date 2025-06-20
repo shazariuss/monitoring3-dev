@@ -1,160 +1,142 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
 // Async thunk для загрузки транзакций
 export const fetchTransactions = createAsyncThunk(
-  'transactions/fetchTransactions',
-  async (params = {}, { rejectWithValue }) => {
-    try {
-      // Очищаем параметры от null и пустых значений
-      const cleanParams = {}
-      
-      Object.keys(params).forEach(key => {
-        const value = params[key]
-        if (value !== null && 
-            value !== undefined && 
-            value !== '' && 
-            value !== 'null' && 
-            value !== 'undefined') {
-          cleanParams[key] = value
-        }
-      })
-      
-      console.log('📡 Fetching transactions with cleaned params:', cleanParams)
-      
-      const queryString = new URLSearchParams(cleanParams).toString()
-      const url = `/api/transactions${queryString ? `?${queryString}` : ''}`
-      
-      console.log('🌐 Request URL:', url)
-      
-      const response = await fetch(url)
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-      }
-      
-      const data = await response.json()
-      
-      console.log('✅ Transactions loaded:', {
-        count: data.data?.length || 0,
-        total: data.pagination?.total || 0,
-        page: data.pagination?.current || 1
-      })
-      
-      return data
-    } catch (error) {
-      console.error('❌ Error fetching transactions:', error)
-      return rejectWithValue(error.message)
-    }
-  }
-)
+    "transactions/fetchTransactions",
+    async (filters = {}, { rejectWithValue }) => {
+        try {
+            const params = new URLSearchParams();
 
-// Async thunk для загрузки статистики
-export const fetchStats = createAsyncThunk(
-  'transactions/fetchStats',
-  async (_, { rejectWithValue }) => {
-    try {
-      console.log('📊 Fetching transaction statistics...')
-      
-      const response = await fetch('/api/transactions/stats')
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-      }
-      
-      const data = await response.json()
-      
-      console.log('✅ Statistics loaded:', data)
-      
-      return data
-    } catch (error) {
-      console.error('❌ Error fetching stats:', error)
-      return rejectWithValue(error.message)
+            // Добавляем фильтры в параметры запроса
+            if (filters.page) params.append("page", filters.page);
+            if (filters.limit) params.append("limit", filters.limit);
+            if (filters.dateFrom) params.append("dateFrom", filters.dateFrom);
+            if (filters.dateTo) params.append("dateTo", filters.dateTo);
+            if (filters.status) params.append("status", filters.status);
+            if (filters.type) params.append("type", filters.type);
+            if (filters.search) params.append("search", filters.search);
+            if (filters.errorsOnly)
+                params.append("errorsOnly", filters.errorsOnly);
+
+            const response = await fetch(
+                `/api/transactions?${params.toString()}`
+            );
+
+            if (!response.ok) {
+                throw new Error(
+                    `HTTP ${response.status}: ${response.statusText}`
+                );
+            }
+
+            const data = await response.json();
+
+            return data;
+        } catch (error) {
+            return rejectWithValue(error.message);
+        }
     }
-  }
-)
+);
+
+// Async thunk для загрузки одной транзакции
+export const fetchTransactionById = createAsyncThunk(
+    "transactions/fetchTransactionById",
+    async (id, { rejectWithValue }) => {
+        try {
+            const response = await fetch(`/api/transactions/${id}`);
+
+            if (!response.ok) {
+                throw new Error(
+                    `HTTP ${response.status}: ${response.statusText}`
+                );
+            }
+
+            const data = await response.json();
+
+            return data;
+        } catch (error) {
+            return rejectWithValue(error.message);
+        }
+    }
+);
 
 const initialState = {
-  transactions: {
     data: [],
+    currentTransaction: null,
+    loading: false,
+    error: null,
     pagination: {
-      current: 1,
-      pageSize: 10,
-      total: 0
-    }
-  },
-  stats: {
-    total: 0,
-    errors: 0,
-    pending: 0,
-    success: 0
-  },
-  loading: false,
-  statsLoading: false,
-  error: null,
-  lastUpdate: null,
-  lastStatsUpdate: null
-}
+        current: 1,
+        pageSize: 10,
+        total: 0,
+        showSizeChanger: true,
+        showQuickJumper: true,
+    },
+};
 
 const transactionSlice = createSlice({
-  name: 'transactions',
-  initialState,
-  reducers: {
-    clearTransactions: (state) => {
-      state.transactions = {
-        data: [],
-        pagination: {
-          current: 1,
-          pageSize: 10,
-          total: 0
-        }
-      }
-      state.error = null
+    name: "transactions",
+    initialState,
+    reducers: {
+        clearCurrentTransaction: (state) => {
+            state.currentTransaction = null;
+        },
+        clearError: (state) => {
+            state.error = null;
+        },
+        setPage: (state, action) => {
+            state.pagination.current = action.payload;
+        },
+        setPageSize: (state, action) => {
+            state.pagination.pageSize = action.payload;
+            state.pagination.current = 1;
+        },
     },
-    updateLastUpdate: (state) => {
-      state.lastUpdate = new Date().toISOString()
+    extraReducers: (builder) => {
+        builder
+            // Загрузка списка транзакций
+            .addCase(fetchTransactions.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(fetchTransactions.fulfilled, (state, action) => {
+                state.loading = false;
+                state.data = action.payload.data || [];
+                state.pagination = {
+                    ...state.pagination,
+                    ...action.payload.pagination,
+                    current:
+                        action.payload.pagination?.page ||
+                        state.pagination.current,
+                    pageSize:
+                        action.payload.pagination?.limit ||
+                        state.pagination.pageSize,
+                    total: action.payload.pagination?.total || 0,
+                };
+            })
+            .addCase(fetchTransactions.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+                state.data = [];
+            })
+            // Загрузка одной транзакции
+            .addCase(fetchTransactionById.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(fetchTransactionById.fulfilled, (state, action) => {
+                state.loading = false;
+                state.currentTransaction = action.payload;
+            })
+            .addCase(fetchTransactionById.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+                state.currentTransaction = null;
+            });
     },
-    clearStats: (state) => {
-      state.stats = {
-        total: 0,
-        errors: 0,
-        pending: 0,
-        success: 0
-      }
-    }
-  },
-  extraReducers: (builder) => {
-    builder
-      // Транзакции
-      .addCase(fetchTransactions.pending, (state) => {
-        state.loading = true
-        state.error = null
-      })
-      .addCase(fetchTransactions.fulfilled, (state, action) => {
-        state.loading = false
-        state.transactions = action.payload
-        state.error = null
-        state.lastUpdate = new Date().toISOString()
-      })
-      .addCase(fetchTransactions.rejected, (state, action) => {
-        state.loading = false
-        state.error = action.payload
-        console.error('Transaction fetch failed:', action.payload)
-      })
-      // Статистика
-      .addCase(fetchStats.pending, (state) => {
-        state.statsLoading = true
-      })
-      .addCase(fetchStats.fulfilled, (state, action) => {
-        state.statsLoading = false
-        state.stats = action.payload
-        state.lastStatsUpdate = new Date().toISOString()
-      })
-      .addCase(fetchStats.rejected, (state, action) => {
-        state.statsLoading = false
-        console.error('Stats fetch failed:', action.payload)
-      })
-  }
-})
+});
 
-export const { clearTransactions, updateLastUpdate, clearStats } = transactionSlice.actions
-export default transactionSlice.reducer
+export const { clearCurrentTransaction, clearError, setPage, setPageSize } =
+    transactionSlice.actions;
+
+export default transactionSlice.reducer;
+export const transactionReducer = transactionSlice.reducer;

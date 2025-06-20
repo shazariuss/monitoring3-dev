@@ -1,36 +1,40 @@
-import { useEffect, useCallback } from 'react'
-import { useDispatch } from 'react-redux'
-import { fetchTransactions, fetchStats } from '../../features/transactions/transactionSlice'
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchTransactions } from "../../features/transactions/transactionSlice";
+import { fetchStats } from "../../features/stats/statsSlice"; // Исправлен импорт
+import { setLastUpdate } from "../../features/app/appSlice";
 
-const useAutoRefresh = (interval = 30000, enabled = true) => {
-  const dispatch = useDispatch()
+const useAutoRefresh = () => {
+    const dispatch = useDispatch();
+    const { autoRefresh, refreshInterval } = useSelector((state) => state.app);
+    const filters = useSelector((state) => state.filters);
 
-  const refreshData = useCallback(() => {
-    if (!enabled) return
-    
-    console.log('🔄 Auto-refreshing data... Time:', new Date().toISOString())
-    
-    // Обновляем транзакции с текущими параметрами
-    dispatch(fetchTransactions({ page: 1, limit: 10 }))
-    
-    // Обновляем статистику
-    dispatch(fetchStats())
-  }, [dispatch, enabled])
+    useEffect(() => {
+        if (!autoRefresh) {
+            return;
+        }
 
-  useEffect(() => {
-    if (!enabled) return
+        const intervalId = setInterval(() => {
+            // Обновляем данные
+            dispatch(fetchTransactions(filters));
+            dispatch(fetchStats());
+            dispatch(setLastUpdate());
+        }, refreshInterval);
 
-    console.log(`⏰ Setting up auto-refresh every ${interval}ms`)
-    
-    const intervalId = setInterval(refreshData, interval)
+        // Первое обновление сразу при включении
+        dispatch(fetchTransactions(filters));
+        dispatch(fetchStats());
+        dispatch(setLastUpdate());
 
-    return () => {
-      console.log('🛑 Clearing auto-refresh interval')
-      clearInterval(intervalId)
-    }
-  }, [refreshData, interval, enabled])
+        return () => {
+            clearInterval(intervalId);
+        };
+    }, [dispatch, autoRefresh, refreshInterval, filters]);
 
-  return refreshData
-}
+    return {
+        isAutoRefreshEnabled: autoRefresh,
+        refreshInterval,
+    };
+};
 
-export default useAutoRefresh
+export default useAutoRefresh;
