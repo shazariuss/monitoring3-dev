@@ -5,7 +5,7 @@ const appSlice = createSlice({
     initialState: {
         lastUpdate: null,
         autoRefresh: true,
-        refreshInterval: 30000, // 30 секунд
+        refreshInterval: 30000,
         isOnline: true,
     },
     reducers: {

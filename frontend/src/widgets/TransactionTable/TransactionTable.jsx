@@ -33,7 +33,7 @@ import {
 } from "../../features/filters/filtersSlice";
 import useMessageStates from "../../shared/hooks/useMessageStates";
 import useQueryStates from "../../shared/hooks/useQueryStates";
-// import TransactionDetail from "./TransactionDetail/TransactionDetail";
+
 import TransactionDetails from "../TransactionDetails/TransactionDetails";
 import styles from "./TransactionTable.module.scss";
 
@@ -51,7 +51,6 @@ function TransactionTable() {
     const [selectedTransaction, setSelectedTransaction] = useState(null);
     const [detailsVisible, setDetailsVisible] = useState(false);
 
-    // Загрузка данных при изменении фильтров
     useEffect(() => {
         const searchFilters = {
             page: filters.page || 1,
@@ -67,9 +66,7 @@ function TransactionTable() {
         dispatch(fetchTransactions(searchFilters));
     }, [dispatch, filters]);
 
-    // Функция получения информации о статусе обработки
     const getQueryStatusInfo = (state, statusName, statusColor) => {
-        // Используем данные из справочника R_QUERY_STATES
         if (statusName) {
             return {
                 name: statusName,
@@ -78,7 +75,6 @@ function TransactionTable() {
             };
         }
 
-        // Фоллбэк если нет данных из справочника
         const statusMap = {
             0: {
                 name: "Инициализация",
@@ -141,9 +137,7 @@ function TransactionTable() {
         );
     };
 
-    // Функция получения информации о статусе сообщения
     const getMessageStatusInfo = (status) => {
-        // Ищем в загруженных статусах сообщений
         const messageState = messageStates.find(
             (state) => state.code === status
         );
@@ -156,7 +150,6 @@ function TransactionTable() {
             };
         }
 
-        // Фоллбэк статусы
         const statusMap = {
             7: { name: "Отправлено", color: "success" },
             9: { name: "Завершено", color: "success" },
@@ -171,7 +164,6 @@ function TransactionTable() {
         );
     };
 
-    // Вспомогательные функции для цветов и иконок
     const getStatusIcon = (state) => {
         const iconMap = {
             0: <ClockCircleOutlined />,
@@ -213,7 +205,6 @@ function TransactionTable() {
         return colorMap[status] || "default";
     };
 
-    // Функция форматирования даты
     const formatDateTime = (dateString) => {
         if (!dateString) return "-";
         try {
@@ -231,7 +222,6 @@ function TransactionTable() {
         }
     };
 
-    // Функция получения типа направления
     const getDirectionInfo = (direction) => {
         const directionMap = {
             1: { name: "Входящий", color: "green" },
@@ -245,24 +235,20 @@ function TransactionTable() {
         );
     };
 
-    // Обработчик просмотра деталей
     const handleViewDetails = (record) => {
         setSelectedTransaction(record);
         setDetailsVisible(true);
     };
 
-    // Обработчик скачивания файла
     const handleDownloadFile = (fileName, type = "request") => {
         if (!fileName) return;
 
-        // Здесь будет логика скачивания файла
         const downloadUrl = `/api/files/download?file=${encodeURIComponent(
             fileName
         )}&type=${type}`;
         window.open(downloadUrl, "_blank");
     };
 
-    // Обработчик обновления данных
     const handleRefresh = () => {
         const searchFilters = {
             page: filters.page || 1,
@@ -278,9 +264,7 @@ function TransactionTable() {
         dispatch(fetchTransactions(searchFilters));
     };
 
-    // ИСПРАВЛЕННЫЕ обработчики пагинации
     const handlePageChange = (page, pageSize) => {
-        // Обновляем состояние фильтров
         dispatch(setFiltersPage(page));
         if (pageSize !== filters.limit) {
             dispatch(setFiltersLimit(pageSize));
@@ -436,44 +420,7 @@ function TransactionTable() {
                 </Text>
             ),
         },
-        // {
-        //     title: "Файлы",
-        //     key: "files",
-        //     width: 120,
-        //     render: (_, record) => (
-        //         <Space direction="vertical" size={1}>
-        //             {record.file_name && (
-        //                 <Button
-        //                     type="link"
-        //                     size="small"
-        //                     icon={<DownloadOutlined />}
-        //                     onClick={() =>
-        //                         handleDownloadFile(record.file_name, "request")
-        //                     }
-        //                     style={{ fontSize: "10px", padding: 0 }}
-        //                 >
-        //                     Запрос
-        //                 </Button>
-        //             )}
-        //             {record.res_file_name && (
-        //                 <Button
-        //                     type="link"
-        //                     size="small"
-        //                     icon={<DownloadOutlined />}
-        //                     onClick={() =>
-        //                         handleDownloadFile(
-        //                             record.res_file_name,
-        //                             "response"
-        //                         )
-        //                     }
-        //                     style={{ fontSize: "10px", padding: 0 }}
-        //                 >
-        //                     Ответ
-        //                 </Button>
-        //             )}
-        //         </Space>
-        //     ),
-        // },
+
         {
             title: "Действия",
             key: "actions",
@@ -493,7 +440,6 @@ function TransactionTable() {
         },
     ];
 
-    // ИСПРАВЛЕННАЯ конфигурация пагинации
     const paginationConfig = {
         current: filters.page || 1,
         pageSize: filters.limit || 10,
@@ -505,7 +451,6 @@ function TransactionTable() {
         onShowSizeChange: handlePageSizeChange,
     };
 
-    // Обработка ошибок
     if (error) {
         return (
             <Alert

@@ -64,7 +64,6 @@
 
 //     const handleQuickFilter = (filterKey) => {
 //         if (quickFilter === filterKey) {
-//             // Если тот же фильтр - очищаем
 //             dispatch(clearFilters());
 //             dispatch(fetchTransactions({ page: 1 }));
 //         } else {
@@ -95,7 +94,7 @@
 //                     params.status = 9;
 //                     break;
 //                 case "pendingOnly":
-//                     params.status = "1,2,3"; // Можем расширить backend для множественных статусов
+//                     params.status = "1,2,3";
 //                     break;
 //             }
 

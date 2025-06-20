@@ -6,11 +6,6 @@ class ExportController {
             const filters = req.query;
             const format = req.query.format || "xlsx";
 
-            console.log(
-                `📥 Exporting transactions in ${format.toUpperCase()} format...`
-            );
-            console.log("Filters:", filters);
-
             const exportData = await exportService.exportTransactions(
                 filters,
                 format
@@ -40,8 +35,6 @@ class ExportController {
                 );
                 res.send(exportData);
             }
-
-            console.log(`✅ Export completed: ${filename}`);
         } catch (error) {
             console.error("Error in exportTransactions:", error);
             res.status(500).json({

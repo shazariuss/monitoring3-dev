@@ -18,7 +18,6 @@
         }
     }
 
-    // Кастомные стили для селектов
     :global(.ant-select-selection-item) {
         font-size: 12px;
     }
@@ -28,12 +27,10 @@
         color: #bfbfbf;
     }
 
-    // Стили для даты
     :global(.ant-picker) {
         font-size: 12px;
     }
 
-    // Адаптивность
     @media (max-width: 768px) {
         .form {
             :global(.ant-col) {

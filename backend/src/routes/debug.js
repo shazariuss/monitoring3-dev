@@ -9,9 +9,6 @@ router.get("/transaction/:id/sources", async (req, res) => {
         connection = await getConnection();
         const { id } = req.params;
 
-        console.log(`🔍 Checking sources for transaction ID: ${id}`);
-
-        // Проверяем JSON данные
         const jsonQuery = `
       SELECT 
         QUERY_ID,
@@ -28,7 +25,6 @@ router.get("/transaction/:id/sources", async (req, res) => {
 
         const jsonResult = await connection.execute(jsonQuery, { id });
 
-        // Проверяем XML данные
         const xmlQuery = `
       SELECT 
         QUERY_ID,
@@ -43,7 +39,6 @@ router.get("/transaction/:id/sources", async (req, res) => {
 
         const xmlResult = await connection.execute(xmlQuery, { id });
 
-        // Получаем реальные данные если они есть
         let actualJsonData = null;
         let actualXmlData = null;
 
@@ -122,8 +117,6 @@ router.get("/transaction/:id/sources", async (req, res) => {
             },
         };
 
-        console.log("Debug result:", JSON.stringify(result, null, 2));
-
         res.json(result);
     } catch (error) {
         console.error("Debug error:", error);
@@ -135,7 +128,6 @@ router.get("/transaction/:id/sources", async (req, res) => {
     }
 });
 
-// Утилита для чтения CLOB
 async function readLob(lob) {
     return new Promise((resolve, reject) => {
         let data = "";

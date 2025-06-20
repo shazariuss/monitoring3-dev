@@ -6,12 +6,6 @@ class TransactionService {
         try {
             connection = await getConnection();
 
-            console.log(
-                "📋 Fetching transactions with CLOB data - User: tuitshoxrux, Time: 2025-06-20 11:49:25",
-                filters
-            );
-
-            // Обновленный запрос с правильным получением CLOB данных
             let query = `
       SELECT 
         cq.ID,
@@ -55,7 +49,6 @@ class TransactionService {
             let whereConditions = [];
             let binds = {};
 
-            // Фильтры остаются теми же...
             if (filters.dateFrom && filters.dateTo) {
                 whereConditions.push(
                     `cq.INIT_TIME >= TO_DATE(:dateFrom, 'YYYY-MM-DD')`
@@ -105,20 +98,16 @@ class TransactionService {
                 whereConditions.push(`cq.ERROR IS NOT NULL AND cq.ERROR != 0`);
             }
 
-            // Добавляем WHERE условия
             if (whereConditions.length > 0) {
                 query += ` WHERE ${whereConditions.join(" AND ")}`;
             }
 
-            // Получаем общее количество записей
             const countQuery = `SELECT COUNT(*) as total FROM (${query})`;
             const countResult = await connection.execute(countQuery, binds);
             const totalCount = countResult.rows[0][0];
 
-            // Добавляем сортировку и пагинацию
             query += ` ORDER BY cq.INIT_TIME DESC`;
 
-            // Пагинация
             const page = parseInt(filters.page) || 1;
             const limit = parseInt(filters.limit) || 10;
             const offset = (page - 1) * limit;
@@ -134,17 +123,8 @@ class TransactionService {
             binds.startRow = offset;
             binds.endRow = offset + limit;
 
-            console.log(
-                "📊 Executing query with CLOB handling - User: tuitshoxrux, Time: 2025-06-20 11:49:25"
-            );
-
             const result = await connection.execute(paginatedQuery, binds);
 
-            console.log(
-                `✅ Found ${result.rows.length} transactions with CLOB data - User: tuitshoxrux, Time: 2025-06-20 11:49:25`
-            );
-
-            // Мапим результаты с правильной обработкой CLOB
             const transactions = await Promise.all(
                 result.rows.map(async (row, index) => {
                     const transaction = {};
@@ -154,25 +134,15 @@ class TransactionService {
                             const columnName = column.name.toLowerCase();
                             let value = row[colIndex];
 
-                            // Пропускаем rownum
                             if (columnName === "rn") return;
 
-                            // Обработка CLOB данных
                             if (
                                 value &&
                                 typeof value === "object" &&
                                 value.getData
                             ) {
                                 try {
-                                    console.log(
-                                        `📄 Reading CLOB data for ${columnName} - User: tuitshoxrux, Time: 2025-06-20 11:49:25`
-                                    );
                                     value = await value.getData();
-                                    console.log(
-                                        `✅ CLOB data read successfully for ${columnName}, length: ${
-                                            value?.length || 0
-                                        } - User: tuitshoxrux, Time: 2025-06-20 11:49:25`
-                                    );
                                 } catch (error) {
                                     console.error(
                                         `❌ Error reading CLOB for ${columnName} - User: tuitshoxrux, Time: 2025-06-20 11:49:25:`,
@@ -182,12 +152,10 @@ class TransactionService {
                                 }
                             }
 
-                            // Обработка дат
                             if (value instanceof Date) {
                                 value = value.toISOString();
                             }
 
-                            // Обработка остальных типов
                             if (
                                 typeof value === "string" ||
                                 typeof value === "number" ||
@@ -204,14 +172,6 @@ class TransactionService {
                     return transaction;
                 })
             );
-
-            console.log(`📈 Sample transaction with CLOB data:`, {
-                id: transactions[0]?.id,
-                has_json: !!transactions[0]?.json_data,
-                has_xml: !!transactions[0]?.xml_data,
-                json_length: transactions[0]?.json_data?.length || 0,
-                xml_length: transactions[0]?.xml_data?.length || 0,
-            });
 
             return {
                 data: transactions,
@@ -239,10 +199,6 @@ class TransactionService {
         try {
             connection = await getConnection();
 
-            console.log(
-                "📋 Fetching query states... User: tuitshoxrux, Time: 2025-06-20 11:05:22"
-            );
-
             const query = `
       SELECT 
         ID,
@@ -267,10 +223,6 @@ class TransactionService {
                 messages_state: row[5],
             }));
 
-            console.log(
-                `✅ Loaded ${states.length} query states - User: tuitshoxrux, Time: 2025-06-20 11:05:22`
-            );
-
             return states;
         } catch (error) {
             console.error(
@@ -288,10 +240,6 @@ class TransactionService {
         let connection;
         try {
             connection = await getConnection();
-
-            console.log(
-                "📋 Fetching query states... User: tuitshoxrux, Time: 2025-06-20 10:47:53"
-            );
 
             const query = `
       SELECT 
@@ -313,8 +261,6 @@ class TransactionService {
                 color: row[3],
             }));
 
-            console.log(`✅ Loaded ${states.length} query states`);
-
             return states;
         } catch (error) {
             console.error("❌ Error fetching query states:", error);
@@ -330,10 +276,6 @@ class TransactionService {
         let connection;
         try {
             connection = await getConnection();
-
-            console.log(
-                `📋 Fetching transaction ${id} with full CLOB data - User: tuitshoxrux, Time: 2025-06-20 11:49:25`
-            );
 
             const query = `
       SELECT 
@@ -383,24 +325,14 @@ class TransactionService {
             const row = result.rows[0];
             const transaction = {};
 
-            // Обрабатываем каждое поле, включая CLOB
             await Promise.all(
                 result.metaData.map(async (column, index) => {
                     const columnName = column.name.toLowerCase();
                     let value = row[index];
 
-                    // Обработка CLOB данных
                     if (value && typeof value === "object" && value.getData) {
                         try {
-                            console.log(
-                                `📄 Reading full CLOB data for ${columnName} - User: tuitshoxrux, Time: 2025-06-20 11:49:25`
-                            );
                             value = await value.getData();
-                            console.log(
-                                `✅ Full CLOB data read: ${columnName}, length: ${
-                                    value?.length || 0
-                                } - User: tuitshoxrux, Time: 2025-06-20 11:49:25`
-                            );
                         } catch (error) {
                             console.error(
                                 `❌ Error reading full CLOB for ${columnName} - User: tuitshoxrux, Time: 2025-06-20 11:49:25:`,
@@ -417,13 +349,6 @@ class TransactionService {
                     transaction[columnName] = value;
                 })
             );
-
-            console.log(`📈 Transaction ${id} loaded with CLOB:`, {
-                has_json: !!transaction.json_data,
-                has_xml: !!transaction.xml_data,
-                json_length: transaction.json_data?.length || 0,
-                xml_length: transaction.xml_data?.length || 0,
-            });
 
             return transaction;
         } catch (error) {
@@ -444,10 +369,6 @@ class TransactionService {
         try {
             connection = await getConnection();
 
-            console.log(
-                "📋 Fetching query states... User: tuitshoxrux, Time: 2025-06-20 10:11:45"
-            );
-
             const query = `
       SELECT 
         CODE,
@@ -467,8 +388,6 @@ class TransactionService {
                 active: row[2],
                 color: row[3],
             }));
-
-            console.log(`✅ Loaded ${states.length} query states`);
 
             return states;
         } catch (error) {
@@ -506,8 +425,6 @@ class TransactionService {
                 color: row[3],
             }));
 
-            console.log(`✅ Loaded ${states.length} message states`);
-
             return states;
         } catch (error) {
             console.error("❌ Error fetching message states:", error);
@@ -544,8 +461,6 @@ class TransactionService {
                 success: row[3] || 0,
             };
 
-            console.log("✅ Statistics loaded:", stats);
-
             return stats;
         } catch (error) {
             console.error("❌ Error fetching stats:", error);
@@ -569,9 +484,6 @@ class TransactionService {
                 });
 
                 lob.on("end", () => {
-                    console.log(
-                        `📚 CLOB read completed, final length: ${data.length}`
-                    );
                     resolve(data);
                 });
 
@@ -581,9 +493,6 @@ class TransactionService {
                 });
 
                 setTimeout(() => {
-                    console.log(
-                        `⏰ CLOB read timeout reached, current data length: ${data.length}`
-                    );
                     resolve(data);
                 }, 10000);
             } catch (error) {
@@ -597,10 +506,6 @@ class TransactionService {
         let connection;
         try {
             connection = await getConnection();
-
-            console.log(
-                "📋 Fetching form types - User: tuitshoxrux, Time: 2025-06-20 12:28:15"
-            );
 
             const query = `
       SELECT 
@@ -632,10 +537,6 @@ class TransactionService {
                 ispdf: row[8],
             }));
 
-            console.log(
-                `✅ Loaded ${formTypes.length} form types - User: tuitshoxrux, Time: 2025-06-20 12:28:15`
-            );
-
             return formTypes;
         } catch (error) {
             console.error(
@@ -654,10 +555,6 @@ class TransactionService {
         let connection;
         try {
             connection = await getConnection();
-
-            console.log(
-                "📊 Fetching query states - User: tuitshoxrux, Time: 2025-06-20 12:28:15"
-            );
 
             const query = `
       SELECT 
@@ -683,10 +580,6 @@ class TransactionService {
                 messages_state: row[5],
             }));
 
-            console.log(
-                `✅ Loaded ${queryStates.length} query states - User: tuitshoxrux, Time: 2025-06-20 12:28:15`
-            );
-
             return queryStates;
         } catch (error) {
             console.error(
@@ -706,11 +599,6 @@ class TransactionService {
         try {
             connection = await getConnection();
 
-            console.log(
-                "📨 Fetching message states - User: tuitshoxrux, Time: 2025-06-20 12:28:15"
-            );
-
-            // Поскольку таблица R_MESSAGE_STATES не существует, используем уникальные статусы из MESSAGES
             const query = `
       SELECT DISTINCT 
         STATUS as code,
@@ -739,10 +627,6 @@ class TransactionService {
                 color: row[2],
             }));
 
-            console.log(
-                `✅ Loaded ${messageStates.length} message states - User: tuitshoxrux, Time: 2025-06-20 12:28:15`
-            );
-
             return messageStates;
         } catch (error) {
             console.error(
@@ -762,8 +646,6 @@ class TransactionService {
         try {
             connection = await getConnection();
 
-            console.log("📋 Fetching error codes...");
-
             const query = `
         SELECT 
           CODE,
@@ -779,8 +661,6 @@ class TransactionService {
                 code: row[0],
                 message: row[1],
             }));
-
-            console.log(`✅ Loaded ${errors.length} error codes`);
 
             return errors;
         } catch (error) {
@@ -832,10 +712,6 @@ class TransactionService {
         try {
             connection = await getConnection();
 
-            console.log(
-                "📋 Fetching query states... User: tuitshoxrux, Time: 2025-06-20 10:51:20"
-            );
-
             const query = `
       SELECT 
         CODE,
@@ -856,10 +732,6 @@ class TransactionService {
                 color: row[3],
             }));
 
-            console.log(
-                `✅ Loaded ${states.length} query states - User: tuitshoxrux, Time: 2025-06-20 10:51:20`
-            );
-
             return states;
         } catch (error) {
             console.error(
@@ -879,11 +751,6 @@ class TransactionService {
         try {
             connection = await getConnection();
 
-            console.log(
-                "📋 Fetching form types - User: tuitshoxrux, Time: 2025-06-20 12:37:14"
-            );
-
-            // Сначала проверим структуру таблицы
             const checkQuery = `
       SELECT column_name 
       FROM user_tab_columns 
@@ -893,15 +760,8 @@ class TransactionService {
 
             try {
                 const checkResult = await connection.execute(checkQuery);
-                console.log(
-                    "📊 R_FORM_TYPES columns:",
-                    checkResult.rows.map((row) => row[0])
-                );
-            } catch (e) {
-                console.log("⚠️ Could not check table structure:", e.message);
-            }
+            } catch (e) {}
 
-            // Основной запрос с обработкой возможных различий в структуре
             let query = `
       SELECT 
         ID,
@@ -915,8 +775,7 @@ class TransactionService {
       FROM R_FORM_TYPES
     `;
 
-            // Если нет поля STATE, берем все записи
-            const hasStateColumn = true; // Предполагаем что есть, если ошибка - уберем условие
+            const hasStateColumn = true;
 
             try {
                 if (hasStateColumn) {
@@ -937,19 +796,9 @@ class TransactionService {
                     short_title: row[7],
                 }));
 
-                console.log(
-                    `✅ Loaded ${formTypes.length} form types - User: tuitshoxrux, Time: 2025-06-20 12:37:14`
-                );
-                console.log("📋 Sample form types:", formTypes.slice(0, 3));
-
                 return formTypes;
             } catch (error) {
                 if (error.message.includes("STATE")) {
-                    // Если нет поля STATE, пробуем без условия
-                    console.log(
-                        "⚠️ STATE column not found, trying without WHERE clause - User: tuitshoxrux, Time: 2025-06-20 12:37:14"
-                    );
-
                     const simpleQuery = `
           SELECT 
             ID,
@@ -977,9 +826,6 @@ class TransactionService {
                         short_title: row[7],
                     }));
 
-                    console.log(
-                        `✅ Loaded ${formTypes.length} form types (no STATE filter) - User: tuitshoxrux, Time: 2025-06-20 12:37:14`
-                    );
                     return formTypes;
                 }
                 throw error;
@@ -988,11 +834,6 @@ class TransactionService {
             console.error(
                 "❌ Error fetching form types - User: tuitshoxrux, Time: 2025-06-20 12:37:14:",
                 error
-            );
-
-            // Возвращаем тестовые данные если таблица недоступна
-            console.log(
-                "⚠️ Returning mock form types data - User: tuitshoxrux, Time: 2025-06-20 12:37:14"
             );
 
             return [
@@ -1039,11 +880,6 @@ class TransactionService {
         try {
             connection = await getConnection();
 
-            console.log(
-                "📊 Fetching query states - User: tuitshoxrux, Time: 2025-06-20 12:40:35"
-            );
-
-            // Сначала проверим структуру таблицы
             const checkQuery = `
       SELECT column_name 
       FROM user_tab_columns 
@@ -1053,21 +889,10 @@ class TransactionService {
 
             try {
                 const checkResult = await connection.execute(checkQuery);
-                console.log(
-                    "📊 R_QUERY_STATES columns:",
-                    checkResult.rows.map((row) => row[0])
-                );
-            } catch (e) {
-                console.log(
-                    "⚠️ Could not check R_QUERY_STATES structure:",
-                    e.message
-                );
-            }
+            } catch (e) {}
 
-            // Попробуем несколько вариантов запроса
             let queryStates = [];
 
-            // Вариант 1: полный запрос
             try {
                 const query1 = `
         SELECT 
@@ -1092,16 +917,7 @@ class TransactionService {
                     color: row[4],
                     messages_state: row[5],
                 }));
-
-                console.log(
-                    `✅ Loaded ${queryStates.length} query states (with STATUS filter) - User: tuitshoxrux, Time: 2025-06-20 12:40:35`
-                );
             } catch (error1) {
-                console.log(
-                    "⚠️ First query failed, trying without STATUS filter - User: tuitshoxrux, Time: 2025-06-20 12:40:35"
-                );
-
-                // Вариант 2: без фильтра STATUS
                 try {
                     const query2 = `
           SELECT 
@@ -1125,16 +941,7 @@ class TransactionService {
                         color: row[4],
                         messages_state: row[5],
                     }));
-
-                    console.log(
-                        `✅ Loaded ${queryStates.length} query states (no STATUS filter) - User: tuitshoxrux, Time: 2025-06-20 12:40:35`
-                    );
                 } catch (error2) {
-                    console.log(
-                        "⚠️ Second query failed, trying minimal query - User: tuitshoxrux, Time: 2025-06-20 12:40:35"
-                    );
-
-                    // Вариант 3: минимальный запрос
                     try {
                         const query3 = `
             SELECT 
@@ -1154,22 +961,13 @@ class TransactionService {
                             color: null,
                             messages_state: null,
                         }));
-
-                        console.log(
-                            `✅ Loaded ${queryStates.length} query states (minimal) - User: tuitshoxrux, Time: 2025-06-20 12:40:35`
-                        );
                     } catch (error3) {
-                        console.log(
-                            "⚠️ All queries failed, using mock data - User: tuitshoxrux, Time: 2025-06-20 12:40:35"
-                        );
                         throw error3;
                     }
                 }
             }
 
-            // Если получили данные, возвращаем
             if (queryStates.length > 0) {
-                console.log("📊 Sample query states:", queryStates.slice(0, 3));
                 return queryStates;
             }
 
@@ -1178,11 +976,6 @@ class TransactionService {
             console.error(
                 "❌ Error fetching query states - User: tuitshoxrux, Time: 2025-06-20 12:40:35:",
                 error
-            );
-
-            // Возвращаем mock данные
-            console.log(
-                "⚠️ Returning mock query states data - User: tuitshoxrux, Time: 2025-06-20 12:40:35"
             );
 
             return [

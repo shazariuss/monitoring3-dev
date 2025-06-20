@@ -43,12 +43,10 @@ function Filters() {
     const filters = useSelector((state) => state.filters);
     const [form] = Form.useForm();
 
-    // Загружаем справочники
     const { formTypes, loading: formTypesLoading } = useFormTypes();
     const { queryStates, loading: queryStatesLoading } = useQueryStates();
     const { messageStates, loading: messageStatesLoading } = useMessageStates();
 
-    // Синхронизация формы с Redux
     useEffect(() => {
         form.setFieldsValue({
             dateRange:
@@ -62,7 +60,6 @@ function Filters() {
         });
     }, [filters, form]);
 
-    // Обработчик изменения диапазона дат
     const handleDateRangeChange = (dates) => {
         if (dates && dates.length === 2) {
             dispatch(setDateFrom(dates[0].format("YYYY-MM-DD")));
@@ -71,7 +68,7 @@ function Filters() {
             dispatch(setDateFrom(null));
             dispatch(setDateTo(null));
         }
-        dispatch(setPage(1)); // Сброс на первую страницу
+        dispatch(setPage(1));
     };
 
     const handleQueryStatusChange = (value) => {
@@ -120,7 +117,6 @@ function Filters() {
         ],
     };
 
-    // Подсчет активных фильтров
     const getActiveFiltersCount = () => {
         let count = 0;
         if (filters.dateFrom && filters.dateTo) count++;

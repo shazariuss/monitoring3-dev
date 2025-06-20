@@ -66,7 +66,6 @@ function TransactionDetails({ transaction, onClose }) {
         }
     };
 
-    // Функция скачивания файла
     const handleDownloadFile = (fileName, type = "request") => {
         if (!fileName) return;
 
@@ -76,7 +75,6 @@ function TransactionDetails({ transaction, onClose }) {
         window.open(downloadUrl, "_blank");
     };
 
-    // Функция форматирования даты
     const formatDateTime = (dateString) => {
         if (!dateString) return "-";
         try {
@@ -94,7 +92,6 @@ function TransactionDetails({ transaction, onClose }) {
         }
     };
 
-    // Функция форматирования суммы
     const formatAmount = (amount, currency) => {
         if (!amount) return "-";
 
@@ -106,7 +103,6 @@ function TransactionDetails({ transaction, onClose }) {
         return currency ? `${formattedAmount} ${currency}` : formattedAmount;
     };
 
-    // Функция получения направления
     const getDirectionInfo = (direction) => {
         const directionMap = {
             1: { name: "Входящий", color: "green", icon: <DownloadOutlined /> },
@@ -121,7 +117,6 @@ function TransactionDetails({ transaction, onClose }) {
         );
     };
 
-    // Функция получения статуса обработки
     const getQueryStatusInfo = (state, statusName) => {
         if (statusName) {
             return { name: statusName, color: "processing" };
@@ -142,7 +137,6 @@ function TransactionDetails({ transaction, onClose }) {
         );
     };
 
-    // Временная линия обработки
     const getProcessingTimeline = () => {
         const events = [];
 
@@ -195,7 +189,6 @@ function TransactionDetails({ transaction, onClose }) {
     );
     const timeline = getProcessingTimeline();
 
-    // Проверка наличия JSON данных
     const hasJsonData =
         transaction.json_data && transaction.json_data.length > 0;
 
@@ -206,21 +199,16 @@ function TransactionDetails({ transaction, onClose }) {
             typeof transaction.json_data === "string"
         ) {
             try {
-                // Пробуем распарсить и переформатировать
                 const parsed = JSON.parse(transaction.json_data);
                 return JSON.stringify(parsed, null, 2);
             } catch (e) {
-                // Если не JSON, возвращаем как есть
                 return transaction.json_data;
             }
         }
-        // Если нет json_data, показываем всю транзакцию
+
         return JSON.stringify(transaction, null, 2);
     };
 
-    // Проверка наличия XML данных
-
-    // Обновите проверку наличия данных:
     const hasXmlData = transaction.xml_data && transaction.xml_data.length > 0;
     const getXmlData = () => {
         if (xmlData) return xmlData;

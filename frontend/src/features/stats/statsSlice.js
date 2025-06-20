@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
-// Async thunk для загрузки статистики
 export const fetchStats = createAsyncThunk(
     "stats/fetchStats",
     async (_, { rejectWithValue }) => {

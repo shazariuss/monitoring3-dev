@@ -1,13 +1,11 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
-// Async thunk для загрузки транзакций
 export const fetchTransactions = createAsyncThunk(
     "transactions/fetchTransactions",
     async (filters = {}, { rejectWithValue }) => {
         try {
             const params = new URLSearchParams();
 
-            // Добавляем фильтры в параметры запроса
             if (filters.page) params.append("page", filters.page);
             if (filters.limit) params.append("limit", filters.limit);
             if (filters.dateFrom) params.append("dateFrom", filters.dateFrom);
@@ -37,7 +35,6 @@ export const fetchTransactions = createAsyncThunk(
     }
 );
 
-// Async thunk для загрузки одной транзакции
 export const fetchTransactionById = createAsyncThunk(
     "transactions/fetchTransactionById",
     async (id, { rejectWithValue }) => {
@@ -93,7 +90,7 @@ const transactionSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            // Загрузка списка транзакций
+
             .addCase(fetchTransactions.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -118,7 +115,7 @@ const transactionSlice = createSlice({
                 state.error = action.payload;
                 state.data = [];
             })
-            // Загрузка одной транзакции
+
             .addCase(fetchTransactionById.pending, (state) => {
                 state.loading = true;
                 state.error = null;

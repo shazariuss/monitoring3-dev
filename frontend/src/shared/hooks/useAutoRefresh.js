@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchTransactions } from "../../features/transactions/transactionSlice";
-import { fetchStats } from "../../features/stats/statsSlice"; // Исправлен импорт
+import { fetchStats } from "../../features/stats/statsSlice";
 import { setLastUpdate } from "../../features/app/appSlice";
 
 const useAutoRefresh = () => {
@@ -15,13 +15,11 @@ const useAutoRefresh = () => {
         }
 
         const intervalId = setInterval(() => {
-            // Обновляем данные
             dispatch(fetchTransactions(filters));
             dispatch(fetchStats());
             dispatch(setLastUpdate());
         }, refreshInterval);
 
-        // Первое обновление сразу при включении
         dispatch(fetchTransactions(filters));
         dispatch(fetchStats());
         dispatch(setLastUpdate());

@@ -52,7 +52,7 @@ function CodeViewer({
 }) {
     const [isExpanded, setIsExpanded] = useState(false);
     const [selectedTheme, setSelectedTheme] = useState("vscDarkPlus");
-    const [viewMode, setViewMode] = useState("formatted"); // 'formatted' | 'raw'
+    const [viewMode, setViewMode] = useState("formatted");
 
     const handleCopy = () => {
         navigator.clipboard.writeText(code);
@@ -81,7 +81,6 @@ function CodeViewer({
                 const parsed = JSON.parse(rawCode);
                 return JSON.stringify(parsed, null, 2);
             } else if (language === "xml") {
-                // Простое форматирование XML
                 return rawCode
                     .replace(/></g, ">\n<")
                     .replace(/^\s*\n/gm, "")

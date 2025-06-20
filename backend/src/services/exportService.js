@@ -35,7 +35,6 @@ class ExportService {
             connection = await getConnection();
 
             const cleanedFilters = this.cleanFilters(filters);
-            console.log("Cleaned filters:", cleanedFilters);
 
             let query = `
         SELECT 
@@ -108,9 +107,6 @@ class ExportService {
 
             query += ` ORDER BY cq.INIT_TIME DESC`;
             query += ` FETCH FIRST 10000 ROWS ONLY`;
-
-            console.log("Final query:", query);
-            console.log("Query binds:", binds);
 
             const result = await connection.execute(query, binds);
 
@@ -216,7 +212,6 @@ class ExportService {
             connection = await getConnection();
 
             const cleanedFilters = this.cleanFilters(filters);
-            console.log("Stats cleaned filters:", cleanedFilters);
 
             let query = `
         SELECT COUNT(*) as TOTAL_RECORDS
@@ -259,9 +254,6 @@ class ExportService {
         )`;
                 binds.search = `%${cleanedFilters.search}%`;
             }
-
-            console.log("Stats query:", query);
-            console.log("Stats binds:", binds);
 
             const result = await connection.execute(query, binds);
 

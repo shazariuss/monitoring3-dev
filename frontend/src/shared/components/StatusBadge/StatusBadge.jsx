@@ -59,7 +59,6 @@ function StatusBadge({
     showIcon = true,
     size = "default",
 }) {
-    // Если есть ошибка, показываем статус ошибки
     const finalState = error && error !== 0 ? 8 : state;
     const config = STATUS_CONFIG[finalState] || STATUS_CONFIG[1];
 

@@ -29,10 +29,6 @@ const getTransactionById = async (req, res) => {
     try {
         const { id } = req.params;
 
-        console.log(
-            `📋 Getting transaction ${id} - User: tuitshoxrux, Time: 2025-06-20 11:49:25`
-        );
-
         const transaction = await transactionService.getTransactionById(id);
 
         if (!transaction) {
@@ -41,10 +37,6 @@ const getTransactionById = async (req, res) => {
                 message: `Transaction with ID ${id} does not exist`,
             });
         }
-
-        console.log(
-            `✅ Transaction ${id} retrieved successfully - User: tuitshoxrux, Time: 2025-06-20 11:49:25`
-        );
 
         res.json(transaction);
     } catch (error) {
@@ -75,15 +67,7 @@ const getStats = async (req, res) => {
 
 const getMessageStates = async (req, res) => {
     try {
-        console.log(
-            "📨 Getting message states - User: tuitshoxrux, Time: 2025-06-20 12:28:15"
-        );
-
         const messageStates = await transactionService.getMessageStates();
-
-        console.log(
-            `✅ Message states retrieved successfully: ${messageStates.length} items - User: tuitshoxrux, Time: 2025-06-20 12:28:15`
-        );
 
         res.json(messageStates);
     } catch (error) {
@@ -128,15 +112,7 @@ const testConnection = async (req, res) => {
 
 const getFormTypes = async (req, res) => {
     try {
-        console.log(
-            "📋 Getting form types - User: tuitshoxrux, Time: 2025-06-20 12:37:14"
-        );
-
         const formTypes = await transactionService.getFormTypes();
-
-        console.log(
-            `✅ Form types retrieved successfully: ${formTypes.length} items - User: tuitshoxrux, Time: 2025-06-20 12:37:14`
-        );
 
         res.json(formTypes);
     } catch (error) {
@@ -153,15 +129,7 @@ const getFormTypes = async (req, res) => {
 
 const getQueryStates = async (req, res) => {
     try {
-        console.log(
-            "📊 Getting query states - User: tuitshoxrux, Time: 2025-06-20 12:40:35"
-        );
-
         const queryStates = await transactionService.getQueryStates();
-
-        console.log(
-            `✅ Query states retrieved successfully: ${queryStates.length} items - User: tuitshoxrux, Time: 2025-06-20 12:40:35`
-        );
 
         res.json(queryStates);
     } catch (error) {

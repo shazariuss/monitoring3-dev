@@ -3,12 +3,12 @@ import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
     dateFrom: null,
     dateTo: null,
-    status: null, // Статус обработки (CONV_QUERIES.STATE)
-    messageStatus: null, // Статус сообщения (MESSAGES.STATUS)
-    type: null, // Тип транзакции
-    direction: null, // Направление (1-входящий, 2-исходящий)
-    search: null, // Поиск по ID, референсу, файлу
-    errorsOnly: false, // Только ошибки
+    status: null,
+    messageStatus: null,
+    type: null,
+    direction: null,
+    search: null,
+    errorsOnly: false,
     page: 1,
     limit: 10,
 };
@@ -46,7 +46,7 @@ const filtersSlice = createSlice({
         },
         setLimit: (state, action) => {
             state.limit = action.payload;
-            state.page = 1; // Сброс на первую страницу при изменении лимита
+            state.page = 1;
         },
         clearFilters: (state) => {
             Object.assign(state, {

@@ -155,7 +155,6 @@ function TransactionDetail({ transaction, loading }) {
         return timeline;
     };
 
-    // Функция получения статуса для StatusBadge
     const getStatusForBadge = () => {
         return {
             state: transaction.conv_state || transaction.state,
@@ -165,7 +164,6 @@ function TransactionDetail({ transaction, loading }) {
         };
     };
 
-    // Функция форматирования суммы
     const formatAmount = (amount, currency) => {
         if (!amount) return "Н/Д";
 
@@ -177,7 +175,6 @@ function TransactionDetail({ transaction, loading }) {
         return currency ? `${formattedAmount} ${currency}` : formattedAmount;
     };
 
-    // Проверка наличия данных
     const hasJsonData = transaction.data || transaction.json_data;
     const hasXmlData = transaction.xml_data;
 

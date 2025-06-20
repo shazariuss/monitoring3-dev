@@ -2,8 +2,7 @@ import React, { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { Layout, message } from "antd";
 import Header from "../../widgets/Header/Header";
-// import StatsCards from "../../widgets/StatsCards/StatsCards";
-// import QuickFilters from "../../widgets/QuickFilters/QuickFilters";
+
 import Filters from "../../widgets/Filters/Filters";
 import TransactionTable from "../../widgets/TransactionTable/TransactionTable";
 import { fetchTransactions } from "../../features/transactions/transactionSlice";
@@ -21,7 +20,6 @@ function MainPage() {
     const dispatch = useDispatch();
 
     useEffect(() => {
-        // Загружаем начальные данные
         const loadInitialData = async () => {
             try {
                 await Promise.all([

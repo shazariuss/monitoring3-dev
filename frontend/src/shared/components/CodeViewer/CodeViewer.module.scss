@@ -56,7 +56,6 @@
 .codeContainer {
     position: relative;
 
-    // Стили для скроллбара
     :global {
         pre::-webkit-scrollbar {
             width: 8px;
@@ -85,7 +84,6 @@
     transition: all 0.2s ease;
 }
 
-// Адаптивность
 @media (max-width: 768px) {
     .header {
         flex-direction: column;

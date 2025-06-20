@@ -30,7 +30,6 @@ const useQueryStates = () => {
 
                 setQueryStates(data || []);
             } catch (err) {
-                // Fallback данные
                 const fallbackData = [
                     { id: 0, name: "Инициализация", color: "#1890ff" },
                     { id: 1, name: "В обработке", color: "#faad14" },
@@ -42,7 +41,7 @@ const useQueryStates = () => {
                 ];
 
                 setQueryStates(fallbackData);
-                setError(null); // Не показываем ошибку при использовании fallback
+                setError(null);
             } finally {
                 setLoading(false);
             }

@@ -14,7 +14,6 @@
         padding: 8px 0;
     }
 
-    // Стили для кода
     :global(.token.tag) {
         color: #ff7875;
     }
@@ -47,7 +46,6 @@
         color: #ff7875;
     }
 
-    // Адаптивность для мобильных
     @media (max-width: 768px) {
         :global(.ant-col) {
             margin-bottom: 16px;

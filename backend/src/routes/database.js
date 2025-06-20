@@ -22,8 +22,6 @@ router.get("/inspect", async (req, res) => {
         ];
 
         for (const tableName of tables) {
-            console.log(`📋 Checking table structure for ${tableName}...`);
-
             try {
                 const tableExistsQuery = `
           SELECT COUNT(*) as TABLE_EXISTS
@@ -98,32 +96,15 @@ router.get("/inspect", async (req, res) => {
             }
         }
 
-        console.log("\n🔍 DATABASE INSPECTION REPORT");
-        console.log("============================");
-
         for (const [tableName, tableInfo] of Object.entries(result.tables)) {
-            console.log(`\n📊 Table: ${tableName}`);
-
             if (!tableInfo.exists) {
-                console.log(`  ❌ ${tableInfo.error}`);
                 continue;
             }
 
-            console.log(`  ✅ Exists with ${tableInfo.rowCount} records`);
-            console.log(`  📋 Columns:`);
-
-            tableInfo.columns.forEach((col) => {
-                console.log(
-                    `    - ${col.name}: ${col.type}${
-                        col.length ? `(${col.length})` : ""
-                    } ${col.nullable === "Y" ? "(nullable)" : "(not null)"}`
-                );
-            });
+            tableInfo.columns.forEach((col) => {});
 
             if (tableInfo.sampleData.length > 0) {
-                console.log(`  📄 Sample data:`);
                 tableInfo.sampleData.forEach((row, index) => {
-                    console.log(`    Record ${index + 1}:`);
                     Object.entries(row).forEach(([key, value]) => {
                         const displayValue =
                             value === null
@@ -133,13 +114,10 @@ router.get("/inspect", async (req, res) => {
                                 : typeof value === "string" && value.length > 50
                                 ? value.substring(0, 50) + "..."
                                 : value;
-                        console.log(`      ${key}: ${displayValue}`);
                     });
                 });
             }
         }
-
-        console.log("\n✅ Database inspection completed!");
 
         res.json(result);
     } catch (error) {
