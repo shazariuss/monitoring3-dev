@@ -4,7 +4,6 @@ require("dotenv").config();
 
 const transactionRoutes = require("./routes/transactions");
 const errorRoutes = require("./routes/errors");
-const databaseRoutes = require("./routes/database");
 const exportRoutes = require("./routes/export");
 
 const app = express();
@@ -15,7 +14,6 @@ app.use(express.json());
 
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/errors", errorRoutes);
-app.use("/api/database", databaseRoutes);
 app.use("/api/export", exportRoutes);
 
 app.get("/api/health", (req, res) => {

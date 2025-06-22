@@ -3,27 +3,18 @@ import { useDispatch, useSelector } from "react-redux";
 import {
     Layout,
     Typography,
-    Button,
     Space,
     Badge,
     Switch,
     Select,
     Tooltip,
-    Tag,
 } from "antd";
-import {
-    ReloadOutlined,
-    DownloadOutlined,
-    ClockCircleOutlined,
-    WifiOutlined,
-    UserOutlined,
-} from "@ant-design/icons";
+import { ClockCircleOutlined, WifiOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import "dayjs/locale/ru";
 import relativeTime from "dayjs/plugin/relativeTime";
 
 import {
-    setLastUpdate,
     toggleAutoRefresh,
     setRefreshInterval,
     setOnlineStatus,
@@ -123,6 +114,18 @@ function Header() {
                                 )}
                             </Space>
                         </div>
+                        <div className={styles.headerCenter}>
+                            <img
+                                src="/logo.svg"
+                                alt="Logo"
+                                style={{
+                                    height: "50px",
+                                }}
+                            />
+                            <Text style={{ fontSize: "18px" }}>
+                                SWIFT Monitoring
+                            </Text>
+                        </div>
 
                         <div className={styles.headerRight}>
                             <Space size="middle">
@@ -175,7 +178,7 @@ function Header() {
                                 </Space>
 
                                 {/* Кнопки */}
-                                <Space>
+                                {/* <Space>
                                     <Button
                                         icon={<ReloadOutlined spin={loading} />}
                                         onClick={handleManualRefresh}
@@ -191,7 +194,7 @@ function Header() {
                                     >
                                         Экспорт
                                     </Button>
-                                </Space>
+                                </Space> */}
                             </Space>
                         </div>
                     </div>

@@ -31,7 +31,7 @@ function MainPage() {
 
                 dispatch(setLastUpdate());
             } catch (error) {
-                message.error("Failed to load initial data", 2);
+                message.error("Failed to load initial data", error.message);
             }
         };
 
@@ -43,8 +43,6 @@ function MainPage() {
             <Header />
             <Content className={styles.content}>
                 <div className="container">
-                    {/* <StatsCards /> */}
-                    {/* <QuickFilters /> */}
                     <Filters />
                     <TransactionTable />
                 </div>

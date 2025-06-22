@@ -12,6 +12,4 @@ router.get("/errors", transactionController.getErrors);
 
 router.get("/:id", transactionController.getTransactionById);
 
-router.get("/test/connection", transactionController.testConnection);
-
 module.exports = router;

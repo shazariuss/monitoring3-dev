@@ -342,6 +342,7 @@ function TransactionTable() {
             title: "Статус",
             key: "status",
             width: 180,
+            align: "center",
             render: (_, record) => {
                 const queryStatusInfo = getQueryStatusInfo(
                     record.conv_state,
@@ -357,13 +358,10 @@ function TransactionTable() {
                     <Space direction="vertical" size={2}>
                         {/* Статус обработки (из CONV_QUERIES) */}
                         <div>
-                            <Text type="secondary" style={{ fontSize: "12px" }}>
-                                Обработка:
-                            </Text>
                             <Tag
                                 icon={queryStatusInfo.icon}
                                 color={queryStatusInfo.color}
-                                style={{ fontSize: "12px", marginLeft: 4 }}
+                                style={{ fontSize: "14px", marginLeft: 4 }}
                             >
                                 {queryStatusInfo.name}
                             </Tag>
@@ -374,13 +372,13 @@ function TransactionTable() {
                             <div>
                                 <Text
                                     type="secondary"
-                                    style={{ fontSize: "12px" }}
+                                    style={{ fontSize: "14px" }}
                                 >
                                     Сообщение:
                                 </Text>
                                 <Tag
                                     color={messageStatusInfo.color}
-                                    style={{ fontSize: "9px", marginLeft: 4 }}
+                                    style={{ fontSize: "14px", marginLeft: 4 }}
                                 >
                                     {messageStatusInfo.name}
                                 </Tag>
@@ -399,7 +397,7 @@ function TransactionTable() {
                                     icon={<ExclamationCircleOutlined />}
                                     color="red"
                                     size="small"
-                                    style={{ fontSize: "12px" }}
+                                    style={{ fontSize: "14px" }}
                                 >
                                     Ошибка: {record.error}
                                 </Tag>
@@ -413,9 +411,11 @@ function TransactionTable() {
             title: "Референс",
             dataIndex: "reference_",
             key: "reference",
+            align: "center",
+
             width: 140,
             render: (text) => (
-                <Text code style={{ fontSize: "11px" }}>
+                <Text code style={{ fontSize: "14px" }}>
                     {text || "-"}
                 </Text>
             ),
@@ -443,6 +443,7 @@ function TransactionTable() {
     const paginationConfig = {
         current: filters.page || 1,
         pageSize: filters.limit || 10,
+        align: "center",
         total: pagination?.total || 0,
         showSizeChanger: false,
         showTotal: (total, range) =>

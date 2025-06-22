@@ -32,6 +32,11 @@
     flex-direction: column;
     gap: 4px;
 }
+.headerCenter {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
 
 .title {
     margin: 0 !important;

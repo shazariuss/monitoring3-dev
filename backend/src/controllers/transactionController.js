@@ -40,10 +40,6 @@ const getTransactionById = async (req, res) => {
 
         res.json(transaction);
     } catch (error) {
-        console.error(
-            `❌ Error in getTransactionById ${req.params.id} - User: tuitshoxrux, Time: 2025-06-20 11:49:25:`,
-            error
-        );
         res.status(500).json({
             error: "Failed to fetch transaction",
             message: error.message,
@@ -71,10 +67,6 @@ const getMessageStates = async (req, res) => {
 
         res.json(messageStates);
     } catch (error) {
-        console.error(
-            "❌ Error in getMessageStates - User: tuitshoxrux, Time: 2025-06-20 12:28:15:",
-            error
-        );
         res.status(500).json({
             error: "Failed to fetch message states",
             message: error.message,
@@ -96,30 +88,12 @@ const getErrors = async (req, res) => {
     }
 };
 
-const testConnection = async (req, res) => {
-    try {
-        const result = await transactionService.testConnection();
-
-        res.json(result);
-    } catch (error) {
-        console.error("Error in testConnection:", error);
-        res.status(500).json({
-            error: "Database connection test failed",
-            message: error.message,
-        });
-    }
-};
-
 const getFormTypes = async (req, res) => {
     try {
         const formTypes = await transactionService.getFormTypes();
 
         res.json(formTypes);
     } catch (error) {
-        console.error(
-            "❌ Error in getFormTypes - User: tuitshoxrux, Time: 2025-06-20 12:37:14:",
-            error
-        );
         res.status(500).json({
             error: "Failed to fetch form types",
             message: error.message,
@@ -133,10 +107,6 @@ const getQueryStates = async (req, res) => {
 
         res.json(queryStates);
     } catch (error) {
-        console.error(
-            "❌ Error in getQueryStates - User: tuitshoxrux, Time: 2025-06-20 12:40:35:",
-            error
-        );
         res.status(500).json({
             error: "Failed to fetch query states",
             message: error.message,
@@ -151,6 +121,5 @@ module.exports = {
     getFormTypes,
     getErrors,
     getMessageStates,
-    testConnection,
     getQueryStates,
 };
